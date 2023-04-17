@@ -1,0 +1,26 @@
+from models.resource import Resource
+
+
+class Request:
+    def __init__(self, id):
+        self.id: str = id
+        self.provider = None
+        self.resource: Resource = None
+        self.latency = 0
+        self.returned_to_client = False
+
+    def calculate_aoi(self, current_time) -> (float | None):
+        """
+        Calculates the Age of Information (AoI) if the request was already returned to the client given the current time.
+
+        Args:
+            resource_time: The time when the resource was collected.
+
+        Returns:
+            float: The Age of Information (AoI) in ms.
+        """
+        if not self.returned_to_client:
+            return
+        resource_time = self.resource.storage_time()
+        aoi = current_time - resource_time
+        return aoi
