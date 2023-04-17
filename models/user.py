@@ -11,7 +11,8 @@ class User:
         self.current_position = start_position
         self.time = 0
         self.reached_end_position = False
-
+        self.requests = []
+        
     def move(self, time):
         self.time = time
         distance = self.speed * time

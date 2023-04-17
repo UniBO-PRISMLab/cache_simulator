@@ -1,5 +1,5 @@
 from models.edge_node import EdgeNode
-from models.order_type import OrderType
+from models.enums.order_type import OrderType
 
 
 class CachingOrder:

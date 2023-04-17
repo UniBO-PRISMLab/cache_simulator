@@ -1,13 +1,15 @@
+from models.enums.provider_type import ProviderType
 from models.resource import Resource
 
 
 class Request:
-    def __init__(self, id):
+    def __init__(self, id, execution_timestamp, provider_type: ProviderType):
         self.id: str = id
-        self.provider = None
+        self.provider_type = provider_type
         self.resource: Resource = None
         self.latency = 0
         self.returned_to_client = False
+        self.execution_timestamp = execution_timestamp
 
     def calculate_aoi(self, current_time) -> (float | None):
         """

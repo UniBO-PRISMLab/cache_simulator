@@ -1,3 +1,4 @@
+from parameters import CACHE_DEFAULT_SIZE
 from simulator import generate_edge_node_position
 from models.cache import Cache
 
@@ -9,7 +10,7 @@ class EdgeNode:
     Represents an edge node with a position defined as (x, y) coordinates.
     """
 
-    def __init__(self, cache_size):
+    def __init__(self, cache_size=CACHE_DEFAULT_SIZE):
         """
         Initializes an edge node with a randomly generated (x, y) position.
 

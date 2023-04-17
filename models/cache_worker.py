@@ -1,18 +1,19 @@
-import time
 from typing import List
 
 from models.resource import Resource
 from models.request import Request
-from models.order_type import OrderType
+from models.enums.order_type import OrderType
 from edge_node import EdgeNode
 from models.caching_order import CachingOrder
 from models.bytes_and_time import bytes_and_time
-from parameters import DEFAULT_EXPIRATION_TIME
+from parameters import CACHE_NOT_FOUND_RESOURCE, CLEAN_CACHING_ORDERS_TIME_INTERNAL, DEFAULT_EXPIRATION_TIME, NEIGHBOR_EDGE_NODES
 from shared.helper import calculate_distance
+from models.network_latency import network_latency
+from models.cache import Cache
 
 
 class CacheWorker:
-    def __init__(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes=0, classical_caching=False):
+    def __init__(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes=NEIGHBOR_EDGE_NODES, classical_caching=CACHE_NOT_FOUND_RESOURCE):
         self.cooperative_orders: List[CachingOrder] = []
         self.edge_node = edge_node
         self.cache_nodes = self.get_ordered_cache_nodes_by_distance(
@@ -55,8 +56,7 @@ class CacheWorker:
             else:
                 self.cooperative_orders.append(order)
 
-    def remove_expired_cooperative_orders(self):
-        current_time = self.get_current_time()
+    def remove_expired_cooperative_orders(self, current_time):
         self.cooperative_orders = [
             order for order in self.cooperative_orders if order.expiration_time <= current_time]
 
@@ -71,6 +71,7 @@ class CacheWorker:
             if self._match(order, request.id):
                 request.resource = self.get_from_cache_node(
                     order.cooperator_edge_node, request)
+                request.latency += network_latency.random_ethernet()
                 if self._is_resource(request.resource):
                     return request
 
@@ -94,6 +95,7 @@ class CacheWorker:
     def _check_neighbor_nodes(self, request):
         for cache_node in self.cache_nodes:
             data = self.get_from_cache_node(cache_node, request)
+            request.latency += network_latency.random_ethernet()
             if data is not None:
                 return data
         return
@@ -102,10 +104,6 @@ class CacheWorker:
         self.edge_node.cache.add_resource(
             resource.id, resource.size, resource.expiration_time)
 
-    def get_current_time(self):
-        # Get current time
-        pass
-
     def _match(self, order: CachingOrder, request_id: str):
         # Check if order matches request request
         return order.request_id == request_id
@@ -113,8 +111,21 @@ class CacheWorker:
     def get_from_cache_node(self, node: EdgeNode, request: str):
         return node.cache.get_resource(request)
 
-    def perform_request(self, request: Request):
-        (size, latency) = bytes_and_time.get_time_and_bytes(request.provider)
-        request.resource = Resource(request.id, size, time.time(), DEFAULT_EXPIRATION_TIME)
-        request.latency += latency
+    def perform_request(self, request: Request, current_time):
+        (size, application_latency) = bytes_and_time.get_time_and_bytes(
+            request.provider)
+        request.resource = Resource(
+            request.id, size, current_time, DEFAULT_EXPIRATION_TIME)
+        cloud_network_latency = network_latency.random_cloud()
+        request.latency += (application_latency + cloud_network_latency)
         return request
+
+    def epoch_passed(self, current_time: int):
+        # TODO: improve this
+        self.remove_expired_cooperative_orders(current_time)
+        self.edge_node.cache.epoch_passed()
+
+    def get_cache_hit_rate(self) -> float:
+        if self.total_requests == 0:
+            return 1.0
+        return self.cached_requests / self.total_requests

@@ -1,8 +1,7 @@
 
-import time
 from typing import List
 from models.resource import Resource
-from models.cache_replacement_strategy import CacheReplacementStrategy
+from models.enums.cache_replacement_strategy import CacheReplacementStrategy
 
 # note: I think this is not the right place to add cache hit rate and cache miss rate
 
@@ -18,8 +17,8 @@ class Cache:
         # a cache miss is a cached resource that is not used
         self.cache_misses = 0
 
-    def add_resource(self, resource_id: str, size_bytes: int, expiration_time):
-        storage_time = time.time()
+    def add_resource(self, resource_id: str, size_bytes: int, expiration_time, current_time):
+        storage_time = current_time
         resource = Resource(resource_id, size_bytes,
                             storage_time, expiration_time)
 
@@ -90,21 +89,19 @@ class Cache:
             print(
                 f"Resource {resource_to_remove.resource_id} removed from cache due to LFU strategy.")
 
-    def remove_expired_resources(self):
-        current_time = time.time()
+    def remove_expired_resources(self, current_time: int):
         self.resources = [resource for resource in self.resources if current_time -
                           resource.storage_time <= resource.expiration_time]
         self.current_size_bytes = sum(
             resource.size for resource in self.resources)
 
-    def get_resource(self, resource_id: str):
+    def get_resource(self, resource_id: str, current_time: int):
         self.request_received += 1
         for resource in self.resources:
             if resource.resource_id == resource_id:
-                current_time = time.time()
                 if current_time - resource.storage_time <= resource.expiration_time:
                     resource.frequency += 1
-                    resource.last_time_retrieved = time.time()
+                    resource.last_time_retrieved = current_time
                     print(f"Resource {resource_id} retrieved from cache.")
                     self.cache_hits += 1
                     return resource
@@ -121,3 +118,7 @@ class Cache:
         if self.request_received == 0:
             return 1
         return self.miss_rate / self.request_received
+
+    def epoch_passed(self, current_time):
+        # TODO: optimize this operation
+        self.remove_expired_resources(current_time)

@@ -1,4 +1,4 @@
-from models.provider_type import ProviderType
+from models.enums.provider_type import ProviderType
 
 import pandas as pd
 import numpy as np
