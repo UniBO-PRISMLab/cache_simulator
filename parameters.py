@@ -3,11 +3,16 @@ from models.enums.provider_type import ProviderType
 
 # one hour? 
 EXPERIMENT_DURATION = 3600000
+EXPERIMENT_TYPE = "Normal" #baseline, normal, proactive, cooperative, etc
 NUMBER_OF_EDGE_NODES = 8
-NUMBER_OF_CLIENTS = 100
+NUMBER_OF_USERS = 2#100
+USER_SPEED = 1.42 # avg walking speed in m/s 
 NUMBER_OF_PROVIDERS = 50
-SQUARE_DIMENSIONS = 1000
+AREA_DIMENSIONS = 1000
+GRID_SIZE = 10
 CACHE_SIZE = 1024
+EDGE_NODE_MIN_DISTANCE=100
+
 
 #CACHE WORKER METRICS
 NEIGHBOR_EDGE_NODES = 1

@@ -1,18 +1,36 @@
+import math
 import random
+from typing import List
+from models.cache_worker import CacheWorker
+from models.edge_node import EdgeNode
+from models.request import Request
+
+from parameters import AREA_DIMENSIONS, GRID_SIZE, USER_SPEED
 
 
 class User:
-    def __init__(self, user_id, start_position, end_position, speed, grid_size):
+    def __init__(self, user_id, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, grid_size=GRID_SIZE):
         self.user_id = user_id
         self.start_position = start_position
         self.end_position = end_position
         self.speed = speed
+        self.area_dimension = area_dimension
         self.grid_size = grid_size
-        self.current_position = start_position
         self.time = 0
         self.reached_end_position = False
-        self.requests = []
-        
+        self.requests: List[Request] = []
+        if end_position is None:
+            self.end_position = self.get_random_point()
+        if start_position is None:
+            self.start_position = self.get_random_point()
+        self.current_position = self.start_position
+
+    def check_request(self, time):
+        return self.requests[0] == time
+
+    def get_request(self):
+        return self.requests.pop(0)
+
     def move(self, time):
         self.time = time
         distance = self.speed * time
@@ -47,12 +65,59 @@ class User:
 
     def update_end_position(self):
         if self.reached_end_position:
-            self.end_position = self.generate_random_end_position()
+            self.end_position = self.get_random_point()
 
-    def generate_random_end_position(self):
-        x = random.randint(0, self.grid_size)
-        y = random.randint(0, self.grid_size)
-        return (x, y)
+    def get_random_point(self) -> tuple:
+        """
+        Get a random point inside the area dimensions that respects the grid layout.
+
+        Returns:
+            tuple: Random point as (x, y) coordinates.
+        """
+        # Calculate the number of grids in the x and y directions
+        num_grids = self.area_dimension // self.grid_size
+
+        # Choose a random grid index in the x and y directions
+        grid_index_x = random.randint(0, num_grids - 1)
+        grid_index_y = random.randint(0, num_grids - 1)
+
+        # Calculate the starting point coordinates within the chosen grid
+        starting_point_x = grid_index_x * \
+            self.grid_size + random.uniform(0, self.grid_size)
+        starting_point_y = grid_index_y * \
+            self.grid_size + random.uniform(0, self.grid_size)
+
+        # Return the random starting point as (x, y) coordinates
+        return starting_point_x, starting_point_y
+
+    def get_closest_edge_node(self, edge_nodes: List[EdgeNode], time_epoch: int):
+        min_distance = float('inf')
+        closest_edge_node = None
+        user_position = self.get_position_at_time(time_epoch)
+
+        for edge_node in edge_nodes:
+            edge_node_position = edge_node.get_position()
+            distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
+                                 (user_position[1] - edge_node_position[1]) ** 2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_edge_node = edge_node
+
+        return closest_edge_node
+    def closest_cache_worker(self, cache_workers: List[CacheWorker], time_epoch: int):
+        min_distance = float('inf')
+        closest_cache_worker = None
+        user_position = self.get_position_at_time(time_epoch)
+
+        for cache_worker in cache_workers:
+            edge_node_position = cache_worker.edge_node.get_position()
+            distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
+                                 (user_position[1] - edge_node_position[1]) ** 2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_cache_worker = cache_worker
+
+        return closest_cache_worker
 
     def __str__(self):
         return f"User {self.user_id} - Current Position: {self.current_position} - Time: {self.time}"

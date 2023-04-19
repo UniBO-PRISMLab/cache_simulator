@@ -1,68 +1,42 @@
 import random
-import math
+from models.cache_worker import CacheWorker
+from shared.helper import generate_edge_node_position
+from models.edge_node import EdgeNode
+from models.request_generator import RequestGenerator
+from models.user import User
+
+from parameters import AREA_DIMENSIONS, EDGE_NODE_MIN_DISTANCE, EXPERIMENT_DURATION, EXPERIMENT_TYPE, NUMBER_OF_EDGE_NODES, NUMBER_OF_USERS
 
 
-def generate_edge_node_position(dimension, min_distance, edge_nodes):
-    """
-    Generates a random (x, y) position for a single edge node,
-    ensuring that it is not closer than X from any other edge node.
-
-    Args:
-        edge_nodes (list): The list of all edge nodes.
-        dimension (int): dimension of the area (square)
-        min_distance (int): minimum distance between edge nodes
-    Returns:
-        tuple: The randomly generated (x, y) position as a tuple.
-    """
-    while True:
-        x = random.uniform(0, dimension)
-        y = random.uniform(0, dimension)
-        # Check if the generated (x, y) position is farther than min_distance from all other edge nodes
-        if all(distance((x, y), edge_node.get_position()) >= min_distance for edge_node in edge_nodes):
-            return x, y
+# 1. Initialize users
+users = [User(i) for i in range(NUMBER_OF_USERS)]
+# 2. Assign requests to users for the experiment duration
+request_generator = RequestGenerator(users)
+users = request_generator.users
+# 3. Initialize Edge Nodes
+edge_nodes = [EdgeNode(i) for i in range(NUMBER_OF_EDGE_NODES)]
+for index, edge_node in enumerate(edge_nodes):
+    edge_position = generate_edge_node_position(
+        AREA_DIMENSIONS, EDGE_NODE_MIN_DISTANCE, edge_nodes[:index])
+    edge_node.set_position(edge_position[0], edge_position[1])
 
 
-def distance(p1, p2):
-    """
-    Calculates the Euclidean distance between two points p1 and p2.
-
-    Args:
-        p1 (tuple): The first point as a (x, y) tuple.
-        p2 (tuple): The second point as a (x, y) tuple.
-
-    Returns:
-        float: The Euclidean distance between the two points.
-    """
-    return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
+# 4. Initialize Cache Workers
+if EXPERIMENT_TYPE != "baseline":
+    cache_workers = [CacheWorker(edge_node, edge_nodes)
+                     for edge_node in edge_nodes]
 
 
-def get_closest_edge_node(user, edge_nodes):
-    min_distance = float('inf')
-    closest_edge_node = None
-    user_position = user.get_position()
-
-    for edge_node in edge_nodes:
-        edge_node_position = edge_node.get_position()
-        distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
-                             (user_position[1] - edge_node_position[1]) ** 2)
-        if distance < min_distance:
-            min_distance = distance
-            closest_edge_node = edge_node
-
-    return closest_edge_node
-
-def get_closest_edge_node_in_time(user, edge_nodes, time):
-    min_distance = float('inf')
-    closest_edge_node = None
-    user_position = user.get_position_at_time(time)
-
-    for edge_node in edge_nodes:
-        edge_node_position = edge_node.get_position()
-        distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
-                             (user_position[1] - edge_node_position[1]) ** 2)
-        if distance < min_distance:
-            min_distance = distance
-            closest_edge_node = edge_node
-
-    return closest_edge_node
-
+for time_epoch in range(EXPERIMENT_DURATION):
+    # every time epoch loop all users
+    for user in users:
+        # check if there is a request in the given time_epoch
+        if user.check_request(time_epoch):
+            # if yes, get the request and the closest edge node
+            request = user.get_request()
+            closest_cache_worker = user.closest_cache_worker(
+                edge_nodes, time_epoch)
+            closest_cache_worker.request_data(request, time_epoch)
+    
+    if time_epoch % 1000 == 0:
+        print(f'{time_epoch/1000}s epoch passed from {EXPERIMENT_DURATION/1000}')

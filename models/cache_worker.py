@@ -3,26 +3,24 @@ from typing import List
 from models.resource import Resource
 from models.request import Request
 from models.enums.order_type import OrderType
-from edge_node import EdgeNode
+from models.edge_node import EdgeNode
 from models.caching_order import CachingOrder
 from models.bytes_and_time import bytes_and_time
 from parameters import CACHE_NOT_FOUND_RESOURCE, CLEAN_CACHING_ORDERS_TIME_INTERNAL, DEFAULT_EXPIRATION_TIME, NEIGHBOR_EDGE_NODES
 from shared.helper import calculate_distance
 from models.network_latency import network_latency
-from models.cache import Cache
 
 
 class CacheWorker:
     def __init__(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes=NEIGHBOR_EDGE_NODES, classical_caching=CACHE_NOT_FOUND_RESOURCE):
         self.cooperative_orders: List[CachingOrder] = []
         self.edge_node = edge_node
-        self.cache_nodes = self.get_ordered_cache_nodes_by_distance(
-            edge_node, cache_nodes, neighbor_edge_nodes)
+        self.cache_nodes = self.get_ordered_cache_nodes_by_distance(edge_node, cache_nodes, neighbor_edge_nodes)
         self.total_requests = 0
         self.cached_requests = 0
         self.classical_caching = classical_caching
 
-    def get_ordered_cache_nodes_by_distance(edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes: int) -> List[EdgeNode]:
+    def get_ordered_cache_nodes_by_distance(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes: int) -> List[EdgeNode]:
         """
         Returns a list of N CacheNode objects sorted by their distance from the passed EdgeNode object.
 
@@ -60,9 +58,10 @@ class CacheWorker:
         self.cooperative_orders = [
             order for order in self.cooperative_orders if order.expiration_time <= current_time]
 
-    def request_data(self, request: Request):
+    def request_data(self, request: Request, time_epoch: int):
         self.total_requests += 1
-        request.resource = self.get_from_cache_node(self.edge_node, request.id)
+        request.resource = self.get_from_cache_node(
+            self.edge_node, request.id, time_epoch)
         # 1. check if req exists in local cache
         if self._is_resource(request.resource):
             return request
@@ -70,7 +69,7 @@ class CacheWorker:
         for order in self.cooperative_orders:
             if self._match(order, request.id):
                 request.resource = self.get_from_cache_node(
-                    order.cooperator_edge_node, request)
+                    order.cooperator_edge_node, request, time_epoch)
                 request.latency += network_latency.random_ethernet()
                 if self._is_resource(request.resource):
                     return request
@@ -81,7 +80,7 @@ class CacheWorker:
             return request
 
         # 4. finally, if the cache is not found, grab from the provider
-        resource = self.perform_request(request)
+        resource = self.perform_request(request, time_epoch)
         if self.classical_caching:
             self._store_data(resource)
         return resource
@@ -108,8 +107,8 @@ class CacheWorker:
         # Check if order matches request request
         return order.request_id == request_id
 
-    def get_from_cache_node(self, node: EdgeNode, request: str):
-        return node.cache.get_resource(request)
+    def get_from_cache_node(self, node: EdgeNode, request: str, time_epoch: int):
+        return node.cache.get_resource(request, time_epoch)
 
     def perform_request(self, request: Request, current_time):
         (size, application_latency) = bytes_and_time.get_time_and_bytes(

@@ -1,5 +1,4 @@
 from parameters import CACHE_DEFAULT_SIZE
-from simulator import generate_edge_node_position
 from models.cache import Cache
 
 import time
@@ -10,14 +9,15 @@ class EdgeNode:
     Represents an edge node with a position defined as (x, y) coordinates.
     """
 
-    def __init__(self, cache_size=CACHE_DEFAULT_SIZE):
+    def __init__(self, id, cache_size=CACHE_DEFAULT_SIZE):
         """
         Initializes an edge node with a randomly generated (x, y) position.
 
         Args:
             edge_nodes (list): The list of all edge nodes.
         """
-        self.x, self.y = generate_edge_node_position()
+        self.id = id
+        self.x, self.y = (None, None)
         self.cache = Cache(cache_size)
 
     def get_position(self):
@@ -65,3 +65,5 @@ class EdgeNode:
         print(
             f"Resource {resource_id} not found in cache of EdgeNode {self.edge_node_id}.")
         return None
+    def __str__(self):
+        return f"Edge Node {self.id} - Current Position: {self.get_position()}"

@@ -26,3 +26,6 @@ class Request:
         resource_time = self.resource.storage_time()
         aoi = current_time - resource_time
         return aoi
+
+    def __str__(self):
+        return f"Request {self.id} - provider: {self.provider_type} - latency: {self.latency} - created_at: {self.execution_timestamp} "
