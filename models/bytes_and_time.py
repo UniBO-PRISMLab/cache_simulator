@@ -10,10 +10,10 @@ PATH_TIME = './data/waiting-time/'
 
 
 class BytesAndTime:
-    labels = [ProviderType.LOW, ProviderType.MEDIUM, ProviderType.HIGH]
-    bytes = {ProviderType.LOW: [],
-             ProviderType.MEDIUM: [], ProviderType.HIGH: []}
-    time = {ProviderType.LOW: [], ProviderType.MEDIUM: [], ProviderType.HIGH: []}
+    labels = [ProviderType.LOW.value, ProviderType.MEDIUM.value, ProviderType.HIGH.value]
+    bytes = {ProviderType.LOW.value: [],
+             ProviderType.MEDIUM.value: [], ProviderType.HIGH.value: []}
+    time = {ProviderType.LOW.value: [], ProviderType.MEDIUM.value: [], ProviderType.HIGH.value: []}
 
     def __init__(self, seed=42):
         self.seed = seed
