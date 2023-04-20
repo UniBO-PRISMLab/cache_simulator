@@ -1,5 +1,6 @@
 import math
 import random
+import matplotlib.pyplot as plt
 from typing import List
 from models.cache_worker import CacheWorker
 from models.edge_node import EdgeNode
@@ -148,6 +149,17 @@ class User:
 
         # If the loop completes without choosing a user category, return None (or raise an error, depending on your requirements)
         return None
-
+    def plot_trajectory(self, max_time=1000000):
+        x = [self.start_position[0]]
+        y = [self.start_position[1]]
+        current_position = self.start_position
+        for t in range(1, max_time+1):
+            if not self.reached_end_position:
+                self.move(t)
+                current_position = self.current_position
+            x.append(current_position[0])
+            y.append(current_position[1])
+        plt.plot(x, y)
+        plt.show()
     def __str__(self):
         return f"User {self.id} - Current Position: {self.current_position} - Time: {self.time}"

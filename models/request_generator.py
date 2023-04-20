@@ -24,6 +24,9 @@ class Area:
         self.y2 = y2
         self.popularity: List[Provider] = []
 
+    def __str__(self):
+        return f"Area #{self.id} - X: ({self.x1}, {self.x2}) Y: ({self.y1}, {self.y2}) "
+
 
 class RequestGenerator:
     """
@@ -39,9 +42,9 @@ class RequestGenerator:
         self.time_window = time_window
         self.popularity_distribution = popularity_distribution
         self.popularity = {
-            UserCategory.TYPE: self.generate_popularity_per_type(),
-            UserCategory.LOCATION: self.generate_popularity_per_location(),
-            UserCategory.ID: self.generate_popularity_per_user()
+            UserCategory.TYPE.value: self.generate_popularity_per_type(),
+            UserCategory.LOCATION.value: self.generate_popularity_per_location(),
+            UserCategory.ID.value: self.generate_popularity_per_user()
         }
         self.generate_requests()
 
@@ -83,16 +86,17 @@ class RequestGenerator:
 
     def choose_provider_id(self, user: User, request_time: int) -> Provider:
         provider_index = np.random.zipf(a=self.popularity_distribution)
-        if provider_index > self.number_of_providers:
+        if provider_index > len(self.providers):
             return self.choose_provider_id()
-        if user.category == UserCategory.Type:
-            return self.popularity[UserCategory.Type][user.type][provider_index]
+        if user.category == UserCategory.TYPE:
+            return self.popularity[UserCategory.TYPE.value][user.type][provider_index]
         elif user.category == UserCategory.ID:
-            return self.popularity[UserCategory.ID][user.id][provider_index]
+            return self.popularity[UserCategory.ID.value][user.id][provider_index]
         elif user.category == UserCategory.LOCATION:
             user_location = user.get_position_at_time(request_time)
-            user_subarea = self.find_subarea(user_location)
-            return self.popularity[UserCategory.LOCATION][user_subarea][provider_index]
+            user_subarea = self.find_subarea(
+                user_location, self.popularity[UserCategory.LOCATION.value])
+            return user_subarea.popularity[provider_index]
         else:
             print(
                 f"Invalid user category {user.category} - cannot choose provider id")
@@ -139,7 +143,7 @@ class RequestGenerator:
             subareas.append(subarea)
         return subareas
 
-    def find_subarea(self, point: Tuple[int, int], subareas: List[Area]) -> int:
+    def find_subarea(self, point: Tuple[int, int], subareas: List[Area]) -> Area:
         """
         Finds the subarea that the given point belongs to.
 
@@ -152,5 +156,5 @@ class RequestGenerator:
         """
         for subarea in subareas:
             if subarea.x1 <= point[0] < subarea.x2 and subarea.y1 <= point[1] < subarea.y2:
-                return subarea.id
+                return subarea
         return -1  # If point does not belong to any subarea

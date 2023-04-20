@@ -7,7 +7,7 @@ from parameters import PROVIDER_DISTRIBUTION
 
 
 class Provider:
-    def __init__(self, index, provider_type: ProviderType = None, provider_distribution=PROVIDER_DISTRIBUTION,):
+    def __init__(self, index: int, provider_type: ProviderType = None, provider_distribution=PROVIDER_DISTRIBUTION,):
         self.index = index
         self.id = self.generate_random_string()
         self.provider_distribution = provider_distribution
