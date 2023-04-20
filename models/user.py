@@ -3,14 +3,18 @@ import random
 from typing import List
 from models.cache_worker import CacheWorker
 from models.edge_node import EdgeNode
+from models.enums.user_category import UserCategory
 from models.request import Request
 
 from parameters import AREA_DIMENSIONS, GRID_SIZE, USER_SPEED
 
 
 class User:
-    def __init__(self, user_id, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, grid_size=GRID_SIZE):
+    def __init__(self, user_id, user_category: UserCategory, user_type=None, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, grid_size=GRID_SIZE):
         self.user_id = user_id
+        self.user_category = user_category
+        if user_category is UserCategory.TYPE:
+            self.user_type = user_type
         self.start_position = start_position
         self.end_position = end_position
         self.speed = speed
@@ -104,6 +108,7 @@ class User:
                 closest_edge_node = edge_node
 
         return closest_edge_node
+
     def closest_cache_worker(self, cache_workers: List[CacheWorker], time_epoch: int):
         min_distance = float('inf')
         closest_cache_worker = None
