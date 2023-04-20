@@ -5,8 +5,7 @@ from models.request import Request
 from models.enums.order_type import OrderType
 from models.edge_node import EdgeNode
 from models.caching_order import CachingOrder
-from models.bytes_and_time import bytes_and_time
-from parameters import CACHE_NOT_FOUND_RESOURCE, CLEAN_CACHING_ORDERS_TIME_INTERNAL, DEFAULT_EXPIRATION_TIME, NEIGHBOR_EDGE_NODES
+from parameters import CACHE_NOT_FOUND_RESOURCE, DEFAULT_EXPIRATION_TIME, NEIGHBOR_EDGE_NODES
 from shared.helper import calculate_distance
 from models.network_latency import network_latency
 
@@ -61,14 +60,15 @@ class CacheWorker:
 
     def request_data(self, request: Request, time_epoch: int):
         self.total_requests += 1
+        request.network_latency += network_latency.random_wireless()
         request.resource = self.get_from_cache_node(
-            self.edge_node, request.id, time_epoch)
+            self.edge_node, request.provider.id, time_epoch)
         # 1. check if req exists in local cache
         if self._is_resource(request.resource):
             return request
         # 2. check if request is mapped in a valid caching order
         for order in self.cooperative_orders:
-            if self._match(order, request.id):
+            if self._match(order, request.provider.id):
                 request.resource = self.get_from_cache_node(
                     order.cooperator_edge_node, request, time_epoch)
                 request.network_latency += network_latency.random_ethernet()
@@ -81,10 +81,10 @@ class CacheWorker:
             return request
 
         # 4. finally, if the cache is not found, grab from the provider
-        resource = self.perform_request(request, time_epoch)
+        response = self.perform_request(request, time_epoch)
         if self.classical_caching:
-            self._store_data(resource)
-        return resource
+            self._store_data(response.resource)
+        return response
 
     def _is_resource(self, resource):
         if resource != None:
@@ -100,22 +100,21 @@ class CacheWorker:
                 return data
         return
 
-    def _store_data(self, resource: Resource):
-        self.edge_node.cache.add_resource(
-            resource.id, resource.size, resource.expiration_time)
+    # why pass the whole resource object + time?
+    def _store_data(self, resource: Resource, current_time: int):
+        self.edge_node.cache.add_resource(resource, current_time)
 
-    def _match(self, order: CachingOrder, request_id: str):
+    def _match(self, order: CachingOrder, provider_id: str):
         # Check if order matches request request
-        return order.request_id == request_id
+        return order.provider_id == provider_id
 
-    def get_from_cache_node(self, node: EdgeNode, request: str, time_epoch: int):
-        return node.cache.get_resource(request, time_epoch)
+    def get_from_cache_node(self, node: EdgeNode, provider_id: str, time_epoch: int):
+        return node.cache.get_resource(provider_id, time_epoch)
 
     def perform_request(self, request: Request, current_time):
-        (size, application_latency) = bytes_and_time.get_time_and_bytes(
-            request.provider)
+        (size, application_latency) = request.provider.get_latency_and_bytes()
         request.resource = Resource(
-            request.id, size, current_time, DEFAULT_EXPIRATION_TIME)
+            request.provider.id, size, current_time, DEFAULT_EXPIRATION_TIME)
         request.network_latency += network_latency.random_cloud()
         request.application_latency += application_latency
         return request
