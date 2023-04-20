@@ -15,7 +15,8 @@ class CacheWorker:
     def __init__(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes=NEIGHBOR_EDGE_NODES, classical_caching=CACHE_NOT_FOUND_RESOURCE):
         self.cooperative_orders: List[CachingOrder] = []
         self.edge_node = edge_node
-        self.cache_nodes = self.get_ordered_cache_nodes_by_distance(edge_node, cache_nodes, neighbor_edge_nodes)
+        self.cache_nodes = self.get_ordered_cache_nodes_by_distance(
+            edge_node, cache_nodes, neighbor_edge_nodes)
         self.total_requests = 0
         self.cached_requests = 0
         self.classical_caching = classical_caching
@@ -70,7 +71,7 @@ class CacheWorker:
             if self._match(order, request.id):
                 request.resource = self.get_from_cache_node(
                     order.cooperator_edge_node, request, time_epoch)
-                request.latency += network_latency.random_ethernet()
+                request.network_latency += network_latency.random_ethernet()
                 if self._is_resource(request.resource):
                     return request
 
@@ -94,7 +95,7 @@ class CacheWorker:
     def _check_neighbor_nodes(self, request):
         for cache_node in self.cache_nodes:
             data = self.get_from_cache_node(cache_node, request)
-            request.latency += network_latency.random_ethernet()
+            request.network_latency += network_latency.random_ethernet()
             if data is not None:
                 return data
         return
@@ -115,8 +116,8 @@ class CacheWorker:
             request.provider)
         request.resource = Resource(
             request.id, size, current_time, DEFAULT_EXPIRATION_TIME)
-        cloud_network_latency = network_latency.random_cloud()
-        request.latency += (application_latency + cloud_network_latency)
+        request.network_latency += network_latency.random_cloud()
+        request.application_latency += application_latency
         return request
 
     def epoch_passed(self, current_time: int):

@@ -7,7 +7,8 @@ class Request:
         self.id: str = id
         self.provider_type = provider_type
         self.resource: Resource = None
-        self.latency = 0
+        self.network_latency = 0
+        self.application_latency = 0
         self.returned_to_client = False
         self.execution_timestamp = execution_timestamp
 
@@ -27,5 +28,8 @@ class Request:
         aoi = current_time - resource_time
         return aoi
 
+    def get_total_latency(self):
+        return self.network_latency + self.application_latency
+
     def __str__(self):
-        return f"Request {self.id} - provider: {self.provider_type} - latency: {self.latency} - created_at: {self.execution_timestamp} "
+        return f"Request {self.id} - provider: {self.provider_type} - latency: {self.get_total_latency()} - created_at: {self.execution_timestamp} "
