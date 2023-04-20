@@ -2,11 +2,27 @@ import random
 import math
 import hashlib
 import numpy as np
-from typing import List
+
+from typing import List, Tuple
 from models.enums.provider_type import ProviderType
+from models.enums.user_category import UserCategory
+from models.provider import Provider
 from models.user import User
-from parameters import EXPERIMENT_DURATION, POPULARITY_DISTRIBUTION, PROVIDER_DISTRIBUTION, RATE_OF_EVENT, TIME_WINDOW_SIZE, NUMBER_OF_PROVIDERS_PER_TYPE
 from models.request import Request
+
+from parameters import AREA_DIMENSIONS, EXPERIMENT_DURATION, NUMBER_OF_USER_TYPES, NUMBER_OF_USERS, POPULARITY_DISTRIBUTION, PROVIDER_DISTRIBUTION, RATE_OF_EVENT, SUBAREAS, TIME_WINDOW_SIZE
+
+# TODO: move Area class to a dedicated class file
+
+
+class Area:
+    def __init__(self, id,  x1, y1, x2, y2):
+        self.id = id
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.popularity: List[Provider] = []
 
 
 class RequestGenerator:
@@ -14,15 +30,19 @@ class RequestGenerator:
         Responsible to generate the list of requests for each user
     """
 
-    def __init__(self, users: List[User], provider_distribution=PROVIDER_DISTRIBUTION, time_window=TIME_WINDOW_SIZE, popularity_distribution=POPULARITY_DISTRIBUTION, number_of_providers_per_type=NUMBER_OF_PROVIDERS_PER_TYPE, experiment_duration=EXPERIMENT_DURATION, seed=42):
+    def __init__(self, users: List[User], providers: List[Provider], time_window=TIME_WINDOW_SIZE, popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, seed=42):
         np.random.seed(seed=seed)
         random.seed(seed)
+        self.providers = providers
         self.experiment_duration = experiment_duration
-        self.number_of_providers_per_type = number_of_providers_per_type
         self.users = users
-        self.provider_distribution = provider_distribution
         self.time_window = time_window
         self.popularity_distribution = popularity_distribution
+        self.popularity = {
+            UserCategory.TYPE: self.generate_popularity_per_type(),
+            UserCategory.LOCATION: self.generate_popularity_per_location(),
+            UserCategory.ID: self.generate_popularity_per_user()
+        }
         self.generate_requests()
 
     def generate_requests(self):
@@ -38,38 +58,10 @@ class RequestGenerator:
                 current_time += next_request_execution_time
                 if next_request_execution_time >= self.experiment_duration:
                     break
-                provider_id = self.choose_provider_id()
-                provider_type = self.choose_provider_type()
-                request_id = RequestGenerator.generate_request_id(
-                    provider_id, provider_type)
+                provider = self.choose_provider_id(user, current_time)
                 new_request = Request(
-                    request_id, next_request_execution_time, provider_type)
+                    next_request_execution_time, provider)
                 user.requests.append(new_request)
-
-    def choose_provider_type(self) -> ProviderType:
-        """
-        Chooses a provider type according to the probabilities defined in the PROVIDER_DISTRIBUTION.
-
-        Returns:
-            ProviderType: The chosen provider type.
-        """
-        # Generate a random value from a uniform distribution between 0 and 1
-        u = random.random()
-
-        # Initialize cumulative probability
-        cumulative_prob = 0
-
-        # Iterate through the provider types and their probabilities
-        for provider_type, prob in self.provider_distribution.items():
-            # Add the probability of the current provider type to the cumulative probability
-            cumulative_prob += prob
-
-            # If the cumulative probability exceeds the random value, choose the current provider type
-            if u <= cumulative_prob:
-                return provider_type
-
-        # If the loop completes without choosing a provider type, return None (or raise an error, depending on your requirements)
-        return None
 
     def next_event_time(self, rate: float = RATE_OF_EVENT):
         """
@@ -89,13 +81,76 @@ class RequestGenerator:
 
         return int(time)
 
-    def choose_provider_id(self):
-        provider = np.random.zipf(a=self.popularity_distribution)
-        if provider > self.number_of_providers_per_type:
+    def choose_provider_id(self, user: User, request_time: int) -> Provider:
+        provider_index = np.random.zipf(a=self.popularity_distribution)
+        if provider_index > self.number_of_providers:
             return self.choose_provider_id()
-        return provider
+        if user.category == UserCategory.Type:
+            return self.popularity[UserCategory.Type][user.type][provider_index]
+        elif user.category == UserCategory.ID:
+            return self.popularity[UserCategory.ID][user.id][provider_index]
+        elif user.category == UserCategory.LOCATION:
+            user_location = user.get_position_at_time(request_time)
+            user_subarea = self.find_subarea(user_location)
+            return self.popularity[UserCategory.LOCATION][user_subarea][provider_index]
+        else:
+            print(
+                f"Invalid user category {user.category} - cannot choose provider id")
+            return
 
     @staticmethod
     def generate_request_id(provider_id: int, provider_type: ProviderType):
         plain_id = f"{provider_type}/{provider_id}"
-        return hashlib.sha256( plain_id.encode())
+        return hashlib.sha256(plain_id.encode())
+
+    def generate_popularity_per_type(self) -> List[List[Provider]]:
+        return [random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USER_TYPES)]
+
+    def generate_popularity_per_location(self) -> List[Area]:
+        subareas = self.divide_square_area()
+        for subarea in subareas:
+            subarea.popularity = random.sample(
+                self.providers, len(self.providers))
+        return subareas
+
+    def generate_popularity_per_user(self) -> List[List[Provider]]:
+        return [random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USERS)]
+
+    def divide_square_area(self, dimensions: int = AREA_DIMENSIONS, portions: int = SUBAREAS) -> List[Area]:
+        """
+        Divides a square area of given dimensions into N square portions of equal size.
+        Each portion is assigned an id and its dimensions are returned as a tuple.
+
+        Args:
+            dimensions (int): The dimensions of the square area.
+            portions (int): The number of portions to divide the area into.
+
+        Returns:
+            List[Area]: The list of subareas, where each subarea is a tuple containing an id and its dimensions.
+        """
+        subarea_dimensions = dimensions // int(portions ** 0.5)
+        subareas = []
+        for i in range(portions):
+            row = i // int(portions ** 0.5)
+            col = i % int(portions ** 0.5)
+            x1, y1 = col * subarea_dimensions, row * subarea_dimensions
+            x2, y2 = x1 + subarea_dimensions, y1 + subarea_dimensions
+            subarea = Area(i, x1, y1, x2, y2)
+            subareas.append(subarea)
+        return subareas
+
+    def find_subarea(self, point: Tuple[int, int], subareas: List[Area]) -> int:
+        """
+        Finds the subarea that the given point belongs to.
+
+        Args:
+            point (Tuple[int, int]): The point to find the subarea for.
+            subareas (List[Area]): The list of subareas to search.
+
+        Returns:
+            int: The id of the subarea that the point belongs to.
+        """
+        for subarea in subareas:
+            if subarea.x1 <= point[0] < subarea.x2 and subarea.y1 <= point[1] < subarea.y2:
+                return subarea.id
+        return -1  # If point does not belong to any subarea

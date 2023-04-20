@@ -6,28 +6,28 @@ from models.edge_node import EdgeNode
 from models.enums.user_category import UserCategory
 from models.request import Request
 
-from parameters import AREA_DIMENSIONS, GRID_SIZE, USER_SPEED
+from parameters import AREA_DIMENSIONS, GRID_SIZE, NUMBER_OF_USER_TYPES, USER_CATEGORY_DISTRIBUTION, USER_SPEED
 
 
 class User:
-    def __init__(self, user_id, user_category: UserCategory, user_type=None, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, grid_size=GRID_SIZE):
-        self.user_id = user_id
-        self.user_category = user_category
-        if user_category is UserCategory.TYPE:
-            self.user_type = user_type
-        self.start_position = start_position
-        self.end_position = end_position
+    def __init__(self, id, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, grid_size=GRID_SIZE, category_distribution=USER_CATEGORY_DISTRIBUTION):
+        self.id = id
         self.speed = speed
         self.area_dimension = area_dimension
         self.grid_size = grid_size
         self.time = 0
         self.reached_end_position = False
         self.requests: List[Request] = []
-        if end_position is None:
-            self.end_position = self.get_random_point()
-        if start_position is None:
-            self.start_position = self.get_random_point()
+        self.category_distribution = category_distribution
+        self.start_position = self.get_random_point(
+        ) if start_position is None else start_position
+        self.end_position = self.get_random_point(
+        ) if end_position is None else end_position
         self.current_position = self.start_position
+
+        self.category = self.choose_random_category()
+        self.type = random.randint(
+            0, NUMBER_OF_USER_TYPES) if self.category is UserCategory.TYPE else None
 
     def check_request(self, time):
         return self.requests[0] == time
@@ -124,5 +124,30 @@ class User:
 
         return closest_cache_worker
 
+    def choose_random_category(self) -> UserCategory:
+        """
+        Chooses a random user category type according to the probabilities defined in the USER_CATEGORY_DISTRIBUTION.
+
+        Returns:
+            UserCategory: The chosen user category.
+        """
+        # Generate a random value from a uniform distribution between 0 and 1
+        u = random.random()
+
+        # Initialize cumulative probability
+        cumulative_prob = 0
+
+        # Iterate through the user categories and their probabilities
+        for category, prob in self.category_distribution.items():
+            # Add the probability of the current user category to the cumulative probability
+            cumulative_prob += prob
+
+            # If the cumulative probability exceeds the random value, choose the current user category
+            if u <= cumulative_prob:
+                return category
+
+        # If the loop completes without choosing a user category, return None (or raise an error, depending on your requirements)
+        return None
+
     def __str__(self):
-        return f"User {self.user_id} - Current Position: {self.current_position} - Time: {self.time}"
+        return f"User {self.id} - Current Position: {self.current_position} - Time: {self.time}"
