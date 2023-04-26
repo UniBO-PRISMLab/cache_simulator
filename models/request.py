@@ -5,14 +5,15 @@ from models.resource import Resource
 
 
 class Request:
-    def __init__(self, execution_timestamp, provider: Provider):
+    def __init__(self, execution_time: int, provider: Provider): #,cache_worker: int):
         #self.id: str = uuid.uuid4()
         self.provider = provider
         self.resource: Resource = None
         self.network_latency = 0
         self.application_latency = 0
         self.returned_to_client = False
-        self.execution_timestamp = execution_timestamp
+        self.execution_time = execution_time
+        #self.cache_worker = cache_worker
 
     def calculate_aoi(self, current_time) -> (float | None):
         """
@@ -34,4 +35,4 @@ class Request:
         return self.network_latency + self.application_latency
 
     def __str__(self):
-        return f"Request - provider: {self.provider} - latency: {self.get_total_latency()} - created_at: {self.execution_timestamp} "
+        return f"Request - {self.provider} - latency: {self.get_total_latency()} - created_at: {self.execution_time} "

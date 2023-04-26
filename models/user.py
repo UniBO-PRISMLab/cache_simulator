@@ -11,12 +11,11 @@ from parameters import AREA_DIMENSIONS, GRID_SIZE, NUMBER_OF_USER_TYPES, USER_CA
 
 
 class User:
-    def __init__(self, id, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, grid_size=GRID_SIZE, category_distribution=USER_CATEGORY_DISTRIBUTION):
+    def __init__(self, id, start_position=None, end_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, category_distribution=USER_CATEGORY_DISTRIBUTION):
         self.id = id
         self.speed = speed
         self.area_dimension = area_dimension
-        self.grid_size = grid_size
-        self.time = 0
+        self.time_in_s = 0
         self.reached_end_position = False
         self.requests: List[Request] = []
         self.category_distribution = category_distribution
@@ -25,95 +24,97 @@ class User:
         self.end_position = self.get_random_point(
         ) if end_position is None else end_position
         self.current_position = self.start_position
-
         self.category = self.choose_random_category()
         self.type = random.randint(
             0, NUMBER_OF_USER_TYPES) if self.category is UserCategory.TYPE else None
 
-    def check_request(self, time):
-        return self.requests[0] == time
+    def check_request(self, time_in_ms):
+        return self.requests[0] == time_in_ms
 
     def get_request(self):
         return self.requests.pop(0)
 
-    def move(self, time):
-        self.time = time
-        distance = self.speed * time
-        dx = self.end_position[0] - self.start_position[0]
-        dy = self.end_position[1] - self.start_position[1]
-        total_distance = ((dx ** 2) + (dy ** 2)) ** 0.5
-        if distance >= total_distance:
-            self.current_position = self.end_position
+    def move(self, time_in_s=1):
+        self.time_in_s = time_in_s
+        # Calculate the distance and direction to the end position
+        dx = self.end_position[0] - self.current_position[0]
+        dy = self.end_position[1] - self.current_position[1]
+        distance = math.sqrt(dx**2 + dy**2)
+        if distance == 0:
+            # print('reached end position - assign new random end position')
             self.reached_end_position = True
-        else:
-            unit_x = dx / total_distance
-            unit_y = dy / total_distance
-            # Calculate grid-based position
-            grid_x = int(self.start_position[0] + (unit_x * distance))
-            grid_y = int(self.start_position[1] + (unit_y * distance))
-            # Adjust position to fit within grid size
-            grid_x = max(min(grid_x, self.grid_size), 0)
-            grid_y = max(min(grid_y, self.grid_size), 0)
-            self.current_position = (grid_x, grid_y)
-            self.reached_end_position = False
+            self.end_position = self.get_random_point()
+            return True
+        self.reached_end_position = False
+        direction = (dx/distance, dy/distance)
+
+        # Calculate the maximum distance the user can move in this time step
+        max_distance = self.speed * time_in_s
+
+        # Check if the user can reach the end position in this time step
+        if max_distance >= distance:
+            # print('reached end position in this epoch')
+            self.current_position = self.end_position
+            return
+
+        # Calculate the new position of the user based on their speed and the time passed
+        new_position = (self.current_position[0] + direction[0] * max_distance,
+                        self.current_position[1] + direction[1] * max_distance)
+
+        # Check if the new position is closer to the end position than the current position
+        new_dx = self.end_position[0] - new_position[0]
+        new_dy = self.end_position[1] - new_position[1]
+        new_distance = math.sqrt(new_dx**2 + new_dy**2)
+        if new_distance < distance:
+            # print(f'move towards end position - new position {new_position}')
+            self.current_position = new_position
 
     def get_position(self):
         return self.current_position
 
-    def get_position_at_time(self, time):
-        if time >= self.time:
-            self.move(time - self.time)
-        return self.current_position if self.current_position != self.end_position else self.end_position
-
-    def has_reached_end_position(self):
-        return self.reached_end_position
-
-    def update_end_position(self):
-        if self.reached_end_position:
-            self.end_position = self.get_random_point()
+    def get_position_at_time(self, time_in_s):
+        if time_in_s > self.time_in_s:
+            self.move(time_in_s - self.time_in_s)
+        return self.current_position
 
     def get_random_point(self) -> tuple:
         """
-        Get a random point inside the area dimensions that respects the grid layout.
+        Get a random point inside the area dimensions.
 
         Returns:
             tuple: Random point as (x, y) coordinates.
         """
-        # Calculate the number of grids in the x and y directions
-        num_grids = self.area_dimension // self.grid_size
 
         # Choose a random grid index in the x and y directions
-        grid_index_x = random.randint(0, num_grids - 1)
-        grid_index_y = random.randint(0, num_grids - 1)
+        x = random.randint(0, self.area_dimension - 1)
+        y = random.randint(0, self.area_dimension - 1)
 
-        # Calculate the starting point coordinates within the chosen grid
-        starting_point_x = grid_index_x * \
-            self.grid_size + random.uniform(0, self.grid_size)
-        starting_point_y = grid_index_y * \
-            self.grid_size + random.uniform(0, self.grid_size)
+        return x, y
 
-        # Return the random starting point as (x, y) coordinates
-        return starting_point_x, starting_point_y
-
-    def get_closest_edge_node(self, edge_nodes: List[EdgeNode], time_epoch: int):
+    def get_closest_edge_node(self, edge_nodes: List[EdgeNode], time_epoch_in_ms: int = None):
+        time_epoch_in_s = time_epoch_in_ms / 1000
+        time_epoch_in_s = self.time_in_s_in_s if time_epoch_in_s is None else time_epoch_in_s
         min_distance = float('inf')
         closest_edge_node = None
-        user_position = self.get_position_at_time(time_epoch)
+        user_position = self.get_position_at_time(time_epoch_in_s)
 
         for edge_node in edge_nodes:
             edge_node_position = edge_node.get_position()
-            distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
-                                 (user_position[1] - edge_node_position[1]) ** 2)
+            quad_distance = (user_position[0] - edge_node_position[0]) ** 2 + (
+                user_position[1] - edge_node_position[1]) ** 2
+            distance = math.sqrt(quad_distance)
             if distance < min_distance:
                 min_distance = distance
                 closest_edge_node = edge_node
 
         return closest_edge_node
 
-    def closest_cache_worker(self, cache_workers: List[CacheWorker], time_epoch: int):
+    def closest_cache_worker(self, cache_workers: List[CacheWorker], time_epoch_in_ms: int) -> (CacheWorker | None):
         min_distance = float('inf')
+
         closest_cache_worker = None
-        user_position = self.get_position_at_time(time_epoch)
+        time_epoch_in_s = time_epoch_in_ms / 1000
+        user_position = self.get_position_at_time(time_epoch_in_s)
 
         for cache_worker in cache_workers:
             edge_node_position = cache_worker.edge_node.get_position()
@@ -124,6 +125,23 @@ class User:
                 closest_cache_worker = cache_worker
 
         return closest_cache_worker
+
+    def closest_cache_worker_by_index(self, cache_workers: List[CacheWorker], time_epoch_in_ms: int) -> (int | None):
+        min_distance = float('inf')
+
+        closest_cache_worker_index = None
+        time_epoch_in_s = time_epoch_in_ms / 1000
+        user_position = self.get_position_at_time(time_epoch_in_s)
+
+        for index, cache_worker in enumerate(cache_workers):
+            edge_node_position = cache_worker.edge_node.get_position()
+            distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
+                                 (user_position[1] - edge_node_position[1]) ** 2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_cache_worker_index = index
+
+        return closest_cache_worker_index
 
     def choose_random_category(self) -> UserCategory:
         """
@@ -149,17 +167,28 @@ class User:
 
         # If the loop completes without choosing a user category, return None (or raise an error, depending on your requirements)
         return None
-    def plot_trajectory(self, max_time=1000000):
+
+    def plot_trajectory(self, max_time=100):
         x = [self.start_position[0]]
         y = [self.start_position[1]]
+        plt.rcParams['agg.path.chunksize'] = 10000
+
+        plt.plot(self.end_position[0], self.end_position[1], 'ro')
+        plt.plot(self.start_position[0], self.start_position[1], 'ro')
+
         current_position = self.start_position
         for t in range(1, max_time+1):
-            if not self.reached_end_position:
-                self.move(t)
-                current_position = self.current_position
+            self.move(t)
+            if self.reached_end_position:
+                print('new end position')
+                plt.plot(self.end_position[0], self.end_position[1], 'ro')
+            current_position = self.current_position
             x.append(current_position[0])
             y.append(current_position[1])
+        plt.plot(self.start_position[0], self.start_position[1], 'ro')
+        plt.plot(self.end_position[0], self.end_position[1], 'ro')
         plt.plot(x, y)
         plt.show()
+
     def __str__(self):
-        return f"User {self.id} - Current Position: {self.current_position} - Time: {self.time}"
+        return f"User {self.id} - Current Position: {self.current_position} - Time: {self.time_in_s}"

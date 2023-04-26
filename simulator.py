@@ -1,4 +1,5 @@
 import numpy as np
+from models.cache_manager import CacheManager
 from models.cache_worker import CacheWorker
 from models.provider import Provider
 from shared.helper import generate_edge_node_position
@@ -13,13 +14,13 @@ users = [User(i) for i in range(NUMBER_OF_USERS)]
 
 # 2. Create providers
 providers = [Provider(i) for i in range(NUMBER_OF_PROVIDERS)]
-for provider in providers:
-    print(provider)
+
 
 # 3. Assign requests to providers to each users (according to user category) for the experiment duration
 request_generator = RequestGenerator(users, providers)
 users = request_generator.users
-
+for user in users:
+    print(f"user #{user.id} will make {len(user.requests)}")
 # 4. Initialize Edge Nodes
 edge_nodes = [EdgeNode(i) for i in range(NUMBER_OF_EDGE_NODES)]
 for index, edge_node in enumerate(edge_nodes):
@@ -29,13 +30,16 @@ for index, edge_node in enumerate(edge_nodes):
 
 # 5. Initialize Cache Workers
 if EXPERIMENT_TYPE != "baseline":
-    cache_workers = [CacheWorker(edge_node, edge_nodes)
-                     for edge_node in edge_nodes]
+    cache_workers = [CacheWorker(i, edge_node, edge_nodes)
+                     for i, edge_node in enumerate(edge_nodes)]
 
-
-
+    cache_manager = CacheManager()
+    caching_orders = cache_manager.generate_caching_orders(users, cache_workers)
+    for index, cache_worker_orders in enumerate(caching_orders):
+        cache_workers[index].add_caching_orders(cache_worker_orders)
+""" 
 # Start experiment
-""" for time_epoch in range(EXPERIMENT_DURATION):
+for time_epoch in range(EXPERIMENT_DURATION):
     # every time epoch loop all users
     for user in users:
         # check if there is a request in the given time_epoch
@@ -46,6 +50,6 @@ if EXPERIMENT_TYPE != "baseline":
                 edge_nodes, time_epoch)
             closest_cache_worker.request_data(request, time_epoch)
 
-    if time_epoch % 1000 == 0:
-        print(f'{time_epoch/1000}s epoch passed from {EXPERIMENT_DURATION/1000}')
+    if time_epoch % 60000 == 0:
+        print(f'{time_epoch//1000}s passed from {EXPERIMENT_DURATION//1000}')
  """

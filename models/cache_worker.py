@@ -11,7 +11,8 @@ from models.network_latency import network_latency
 
 
 class CacheWorker:
-    def __init__(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes=NEIGHBOR_EDGE_NODES, classical_caching=CACHE_NOT_FOUND_RESOURCE):
+    def __init__(self, id: int, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes=NEIGHBOR_EDGE_NODES, classical_caching=CACHE_NOT_FOUND_RESOURCE):
+        self.id = id
         self.cooperative_orders: List[CachingOrder] = []
         self.edge_node = edge_node
         self.cache_nodes = self.get_ordered_cache_nodes_by_distance(
@@ -19,6 +20,7 @@ class CacheWorker:
         self.total_requests = 0
         self.cached_requests = 0
         self.classical_caching = classical_caching
+        self.pending_orders: List[CachingOrder] = []
 
     def get_ordered_cache_nodes_by_distance(self, edge_node: EdgeNode, cache_nodes: List[EdgeNode], neighbor_edge_nodes: int) -> List[EdgeNode]:
         """
@@ -48,11 +50,15 @@ class CacheWorker:
         return ordered_cache_nodes[:limit_index]
 
     def add_caching_orders(self, orders: List[CachingOrder]):
+        # print(f"new batch of {len(orders)} caching orders")
         for order in orders:
             if order.type == OrderType.STANDARD:
-                print('get data from provider at order time')
+                # print('get data from provider at order time')
+                self.pending_orders.append(order)
             else:
                 self.cooperative_orders.append(order)
+        self.pending_orders = sorted(
+            self.pending_orders, key=lambda x: x.execution_time)
 
     def remove_expired_cooperative_orders(self, current_time):
         self.cooperative_orders = [
@@ -106,7 +112,7 @@ class CacheWorker:
 
     def _match(self, order: CachingOrder, provider_id: str):
         # Check if order matches request request
-        return order.provider_id == provider_id
+        return order.provider.id == provider_id
 
     def get_from_cache_node(self, node: EdgeNode, provider_id: str, time_epoch: int):
         return node.cache.get_resource(provider_id, time_epoch)
@@ -119,9 +125,20 @@ class CacheWorker:
         request.application_latency += application_latency
         return request
 
+    def _store_pending_order(self, order: CachingOrder):
+        size = order.provider.get_latency()
+        new_resource = Resource(order.provider.id, size,
+                                order.execution_time, DEFAULT_EXPIRATION_TIME)
+        self._store_data(new_resource, order.execution_time)
+
     def epoch_passed(self, current_time: int):
         # TODO: improve this
         self.remove_expired_cooperative_orders(current_time)
+
+        for pending_resource in self.pending_orders:
+            if pending_resource.execution_time > current_time:
+                break
+            self._store_pending_order(pending_resource)
         self.edge_node.cache.epoch_passed()
 
     def get_cache_hit_rate(self) -> float:

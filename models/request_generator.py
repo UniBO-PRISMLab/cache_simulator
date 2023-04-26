@@ -57,10 +57,12 @@ class RequestGenerator:
         for user in self.users:
             current_time = 0
             while current_time <= self.experiment_duration:
+               
+                next_request_in_ms = self.next_event_time()
                 next_request_execution_time = self.next_event_time() + current_time
-                current_time += next_request_execution_time
                 if next_request_execution_time >= self.experiment_duration:
                     break
+                current_time += (next_request_in_ms)
                 provider = self.choose_provider_id(user, current_time)
                 new_request = Request(
                     next_request_execution_time, provider)
@@ -81,13 +83,12 @@ class RequestGenerator:
 
         # Calculate the time of the next event using the inverse of the cumulative distribution function (CDF) of the exponential distribution
         time = -math.log(1 - u) / rate
-
         return int(time)
 
     def choose_provider_id(self, user: User, request_time: int) -> Provider:
         provider_index = np.random.zipf(a=self.popularity_distribution)
-        if provider_index > len(self.providers):
-            return self.choose_provider_id()
+        if provider_index >= len(self.providers):
+            return self.choose_provider_id(user, request_time)
         if user.category == UserCategory.TYPE:
             return self.popularity[UserCategory.TYPE.value][user.type][provider_index]
         elif user.category == UserCategory.ID:

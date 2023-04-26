@@ -1,13 +1,13 @@
-from models.edge_node import EdgeNode
 from models.enums.order_type import OrderType
+from models.provider import Provider
 
 
 class CachingOrder:
-    def __init__(self, edge_node: EdgeNode, execution_time, expiration_time, provider_id: str, type=OrderType.STANDARD, cooperator_edge_node: EdgeNode = None):
+    def __init__(self, cache_worker_id: int, execution_time, expiration_time, provider: Provider, type=OrderType.STANDARD, cooperator_cache_worker: int = None):
         self.type = type
-        self.edge_node = edge_node
+        self.cache_worker_id = cache_worker_id
         self.execution_time = execution_time
-        self.validity_time = expiration_time
-        self.provider_id = provider_id
+        self.expiration_time = expiration_time
+        self.provider = provider
         if type == OrderType.COOPERATIVE:
-            self.cooperator_edge_node = cooperator_edge_node
+            self.cooperator_cache_worker = cooperator_cache_worker

@@ -41,7 +41,7 @@ class Cache:
             else:
                 print(f"Error: Invalid replacement strategy.")
                 return
-    def add_resource(self, provider_id: str, size_bytes: int, expiration_time, current_time):
+    def add_resource_per_description(self, provider_id: str, size_bytes: int, expiration_time, current_time):
         resource = Resource(provider_id, size_bytes,
                             current_time, expiration_time)
         self.add_resource(resource)
