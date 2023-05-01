@@ -21,15 +21,14 @@ class Cache:
         if current_time != None:
             resource.storage_time = current_time
          # check if there is space is cache
-        if self.current_size_bytes + resource.size_bytes <= self.max_size_bytes:
+        if self.current_size_bytes + resource.size <= self.max_size_bytes:
             self.resources.append(resource)
-            self.current_size_bytes += resource.size_bytes
-            print(f"Resource {resource.provider_id} stored in cache.")
+            self.current_size_bytes += resource.size
+            #print(f"Resource {resource.provider_id} stored in cache.")
         else:
             # check if resource bytes is bigger than the maximum cache size
-            if resource.size_bytes > self.max_size_bytes:
-                print(
-                    f'impossible to cache {resource.provider_id} since its size is bigger then the cache size')
+            if resource.size > self.max_size_bytes:
+                print(f'impossible to cache {resource.provider_id} since its size is bigger then the cache size')
                 return
             # If cache is full, apply replacement strategy
             if self.replacement_strategy == CacheReplacementStrategy.LRU:
@@ -106,11 +105,11 @@ class Cache:
                 if current_time - resource.storage_time <= resource.expiration_time:
                     resource.frequency += 1
                     resource.last_time_retrieved = current_time
-                    print(f"Resource {provider_id} retrieved from cache.")
+                    #print(f"Resource {provider_id} retrieved from cache.")
                     self.cache_hits += 1
                     return resource
                 else:
-                    print(f"Resource {provider_id} not found in cache")
+                    #print(f"Resource {provider_id} not found in cache")
                     return
 
     def get_cache_hit_rate(self):

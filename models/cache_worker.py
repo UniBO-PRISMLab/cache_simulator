@@ -139,7 +139,6 @@ class CacheWorker:
             if pending_resource.execution_time > current_time:
                 break
             self._store_pending_order(pending_resource)
-        self.edge_node.cache.epoch_passed()
 
     def get_cache_hit_rate(self) -> float:
         if self.total_requests == 0:

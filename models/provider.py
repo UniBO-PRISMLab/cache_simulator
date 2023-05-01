@@ -59,7 +59,7 @@ class Provider:
         return bytes_and_time.get_bytes(self.provider_type)
 
     def get_latency_and_bytes(self):
-        return (self.get_provider_latency, self.get_provider_bytes)
+        return (self.get_latency(), self.get_bytes())
 
     def __str__(self):
         if self.provider_type != None:

@@ -24,6 +24,7 @@ class CacheManager:
         requests_per_cache_worker = [[] for cache_worker in cache_workers]
         for user in users:
             for request in user.requests:
+
                 closest_cache_worker = user.closest_cache_worker_by_index(
                     cache_workers, request.execution_time)
                 requests_per_cache_worker[closest_cache_worker].append(request)
@@ -48,6 +49,7 @@ class CacheManager:
                     if not self.check_redundant_cache_order(new_caching_order, caching_orders_per_cache_worker[index]):
                         caching_orders_per_cache_worker[index].append(
                             new_caching_order)
+
             caching_orders_per_cache_worker[index] = sorted(
                 caching_orders_per_cache_worker[index], key=lambda x: x.execution_time)
 

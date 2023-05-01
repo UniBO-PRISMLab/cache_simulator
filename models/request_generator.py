@@ -10,7 +10,7 @@ from models.provider import Provider
 from models.user import User
 from models.request import Request
 
-from parameters import AREA_DIMENSIONS, EXPERIMENT_DURATION, NUMBER_OF_USER_TYPES, NUMBER_OF_USERS, POPULARITY_DISTRIBUTION, PROVIDER_DISTRIBUTION, RATE_OF_EVENT, SUBAREAS, TIME_WINDOW_SIZE
+from parameters import AREA_DIMENSIONS, EXPERIMENT_DURATION, NUMBER_OF_USER_TYPES, NUMBER_OF_USERS, POPULARITY_DISTRIBUTION, RATE_OF_EVENT, SUBAREAS
 
 # TODO: move Area class to a dedicated class file
 
@@ -33,13 +33,12 @@ class RequestGenerator:
         Responsible to generate the list of requests for each user
     """
 
-    def __init__(self, users: List[User], providers: List[Provider], time_window=TIME_WINDOW_SIZE, popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, seed=42):
+    def __init__(self, users: List[User], providers: List[Provider],  popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, seed=42):
         np.random.seed(seed=seed)
         random.seed(seed)
         self.providers = providers
         self.experiment_duration = experiment_duration
         self.users = users
-        self.time_window = time_window
         self.popularity_distribution = popularity_distribution
         self.popularity = {
             UserCategory.TYPE.value: self.generate_popularity_per_type(),
@@ -59,7 +58,7 @@ class RequestGenerator:
             while current_time <= self.experiment_duration:
                
                 next_request_in_ms = self.next_event_time()
-                next_request_execution_time = self.next_event_time() + current_time
+                next_request_execution_time = next_request_in_ms + current_time
                 if next_request_execution_time >= self.experiment_duration:
                     break
                 current_time += (next_request_in_ms)
@@ -85,6 +84,8 @@ class RequestGenerator:
         time = -math.log(1 - u) / rate
         return int(time)
 
+
+    #solve time problem = user in s and rest in ms
     def choose_provider_id(self, user: User, request_time: int) -> Provider:
         provider_index = np.random.zipf(a=self.popularity_distribution)
         if provider_index >= len(self.providers):

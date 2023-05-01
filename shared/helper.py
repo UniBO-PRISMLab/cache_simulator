@@ -1,5 +1,6 @@
 import math
 import random
+from typing import List
 
 
 def generate_edge_node_position(dimension, min_distance, edge_nodes):
@@ -52,3 +53,12 @@ def calculate_distance(point1: tuple, point2: tuple) -> float:
     x2, y2 = point2
     distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     return distance
+
+
+def pass_time(time_epoch, users, cache_workers, edge_nodes):
+    for user in users:
+        user.epoch_passed(time_epoch)
+    for cache_worker in cache_workers:
+        cache_worker.epoch_passed(time_epoch)
+    for edge_node in edge_nodes:
+        edge_node.cache.epoch_passed(time_epoch)

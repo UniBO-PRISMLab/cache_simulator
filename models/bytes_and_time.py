@@ -10,10 +10,12 @@ PATH_TIME = './data/waiting-time/'
 
 
 class BytesAndTime:
-    labels = [ProviderType.LOW.value, ProviderType.MEDIUM.value, ProviderType.HIGH.value]
+    labels = [ProviderType.LOW.value,
+              ProviderType.MEDIUM.value, ProviderType.HIGH.value]
     bytes = {ProviderType.LOW.value: [],
              ProviderType.MEDIUM.value: [], ProviderType.HIGH.value: []}
-    time = {ProviderType.LOW.value: [], ProviderType.MEDIUM.value: [], ProviderType.HIGH.value: []}
+    time = {ProviderType.LOW.value: [],
+            ProviderType.MEDIUM.value: [], ProviderType.HIGH.value: []}
 
     def __init__(self, seed=42):
         self.seed = seed
@@ -35,15 +37,16 @@ class BytesAndTime:
         return cls.instance
 
     def get_bytes(self, workload: ProviderType) -> int:
-        random_number = np.random.randint(0, len(self.bytes[workload]))
-        return int(self.bytes[workload]['sc-bytes'][random_number])
+        random_number = np.random.randint(
+            0, len(self.bytes[workload.value]) - 1)
+        return int(self.bytes[workload.value]['sc-bytes'][random_number])
         # return self.bytes[workload].sample(random_state=self.seed).iloc[0].iloc[0]
 
     def get_time(self, workload: ProviderType) -> int:
-        random_number = random.randint(0, len(self.time[workload]))
-        return int(self.time[workload]['time-taken'][random_number])
+        random_number = random.randint(0, len(self.time[workload.value]) - 1)
+        return int(self.time[workload.value]['time-taken'][random_number])
 
-    def get_time_and_bytes(self, workload: ProviderType)-> tuple:
+    def get_time_and_bytes(self, workload: ProviderType) -> tuple:
         return self.get_time(workload), self.get_bytes(workload)
 
 
