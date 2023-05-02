@@ -128,17 +128,18 @@ class CacheWorker:
     def _store_pending_order(self, order: CachingOrder):
         size = order.provider.get_latency()
         new_resource = Resource(order.provider.id, size,
-                                order.execution_time, DEFAULT_EXPIRATION_TIME)
+                                order.execution_time, order.expiration_time)
         self._store_data(new_resource, order.execution_time)
 
     def epoch_passed(self, current_time: int):
         # TODO: improve this
         self.remove_expired_cooperative_orders(current_time)
-
         for pending_resource in self.pending_orders:
             if pending_resource.execution_time > current_time:
                 break
             self._store_pending_order(pending_resource)
+            self.pending_orders.remove(pending_resource)
+
 
     def get_cache_hit_rate(self) -> float:
         if self.total_requests == 0:
