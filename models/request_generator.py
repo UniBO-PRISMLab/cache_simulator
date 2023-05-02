@@ -82,6 +82,9 @@ class RequestGenerator:
 
         # Calculate the time of the next event using the inverse of the cumulative distribution function (CDF) of the exponential distribution
         time = -math.log(1 - u) / rate
+        discrete_time = int(time)
+        if(discrete_time <= 0):
+            return self.next_event_time(rate)
         return int(time)
 
 
