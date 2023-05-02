@@ -34,10 +34,10 @@ if EXPERIMENT_TYPE != "baseline":
                      for i, edge_node in enumerate(edge_nodes)]
 
     cache_manager = CacheManager()
-    caching_orders = cache_manager.generate_caching_orders(
-        users, cache_workers)
+    caching_orders = cache_manager.generate_caching_orders(users, cache_workers)
     for index, cache_worker_orders in enumerate(caching_orders):
         cache_workers[index].add_caching_orders(cache_worker_orders)
+
 
 
 # Start experiment
@@ -51,7 +51,7 @@ for time_epoch in range(EXPERIMENT_DURATION):
             # get the request and the closest edge node
             request = user.get_request()
             closest_cache_worker = user.closest_cache_worker(
-                cache_workers, time_epoch)
+                cache_workers)
             closest_cache_worker.request_data(request, time_epoch)
 
     if time_epoch % 60000 == 0:
@@ -60,5 +60,5 @@ for time_epoch in range(EXPERIMENT_DURATION):
 acc = 0
 for cache_worker in cache_workers:
     acc += cache_worker.total_requests
-    print(f"Cache Worker #{cache_worker.id} received {cache_worker.total_requests} requests and its hit rate was {cache_worker.get_cache_hit_rate()}" )
+    print(f"Cache Worker #{cache_worker.id} received {cache_worker.total_requests} requests and its hit rate was {cache_worker.get_cache_hit_rate()}")
 print(f"total requests: {acc}")
