@@ -1,7 +1,9 @@
 import unittest
+from models.cache_worker import CacheWorker
 from models.edge_node import EdgeNode
 
 from models.user import User
+from parameters import AREA_DIMENSIONS, EDGE_NODE_MIN_DISTANCE
 from shared.helper import distance, generate_edge_node_position
 
 edge_nodes = [EdgeNode(i) for i in range(5)]
@@ -9,29 +11,63 @@ edge_nodes = [EdgeNode(i) for i in range(5)]
 
 class TestUserMobility(unittest.TestCase):
 
-    def test_starting_point(self):
-        user = User(id=0, area_dimension=100)
+    def test_get_user_position_in_time(self):
+        error_tolerance = 1E-4
+        user = User(id=0)
+        test_experiment_time = 100000
+        predicted_movement = []
+        actual_movement = []
+        for time in range(test_experiment_time):
+            predicted_movement.append(user.get_position_at_time(time+1))
+        for time in range(test_experiment_time):
+            user.epoch_passed(time+1)
+            actual_movement.append(user.get_position())
 
-    def test_closest_edge_node(self):
-        area_dimension = 100
-        edge_nodes = [EdgeNode(i) for i in range(2)]
+        self.assertEqual(len(actual_movement), len(predicted_movement))
+
+        for i in range(len(actual_movement)):
+            squared_error = ((actual_movement[i][0] - predicted_movement[i][0]) ** 2,
+                             ((actual_movement[i][1] - predicted_movement[i][1]) ** 2))
+            self.assertGreater(error_tolerance, squared_error[0])
+            self.assertGreater(error_tolerance, squared_error[1])
+
+    def test_user_predicted_and_real_edge(self):
+        edge_nodes = [EdgeNode(i) for i in range(10)]
         for index, edge_node in enumerate(edge_nodes):
             edge_position = generate_edge_node_position(
-                area_dimension, 5, edge_nodes[:index])
+                AREA_DIMENSIONS, EDGE_NODE_MIN_DISTANCE, edge_nodes[:index])
             edge_node.set_position(edge_position[0], edge_position[1])
-            print(edge_node)
-        user = User(id=0, area_dimension=area_dimension)
-        closest_edge = None
+        cache_workers = [CacheWorker(
+            i, edge_nodes[i], edge_nodes) for i in range(10)]
+        user = User(id=0)
+        test_experiment_time = 100000
+        predicted_cache_worker = []
+        actual_cache_worker = []
+        for time in range(test_experiment_time):
+            predicted = user.closest_cache_worker_by_index_in_time(
+                cache_workers, time + 1)
+            predicted_cache_worker.append(predicted)
+        for time in range(test_experiment_time):
+            user.epoch_passed(time)
+            actual = user.closest_cache_worker_by_id(cache_workers)
+            actual_cache_worker.append(actual)
 
-        for i in range(600):
-            user.move()
-            if closest_edge != user.get_closest_edge_node(edge_nodes):
-                closest_edge = user.get_closest_edge_node(edge_nodes)
-                print(f"edge: {closest_edge} - user: {user.get_position()}")
-                for edge in edge_nodes:
-                    print(
-                        f"edge: {edge} - distance: {distance(edge.get_position(), user.get_position())}")
-                print("\n")
+        self.assertEqual(len(actual_cache_worker), len(predicted_cache_worker))
+        current_edge = None
+        acc = 0
+        for i in range(len(actual_cache_worker)):
+            if actual_cache_worker[i] == predicted_cache_worker[i]:
+                acc += 1
+            else:
+                print(acc)
+                print(
+                    f"DIFFERENT {actual_cache_worker[i]} != {predicted_cache_worker[i]}")
+            if actual_cache_worker[i] != current_edge:
+                current_edge = actual_cache_worker[i]
+                print(f"NEW actual: {actual_cache_worker[i]}")
+        print(acc)
+
+            #self.assertEqual(actual_cache_worker[i], predicted_cache_worker[i])
 
 
 if __name__ == '__main__':

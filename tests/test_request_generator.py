@@ -1,9 +1,9 @@
 import unittest
 
-from models.provider import Provider
-from models.request_generator import RequestGenerator
-from models.user import User
-from parameters import NUMBER_OF_PROVIDERS, NUMBER_OF_USERS
+from ..models.provider import Provider
+from ..models.request_generator import RequestGenerator
+from ..models.user import User
+from ..parameters import NUMBER_OF_PROVIDERS, NUMBER_OF_USERS
 
 users = [User(i) for i in range(NUMBER_OF_USERS)]
 
