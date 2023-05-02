@@ -17,18 +17,20 @@ class Cache:
         # a cache miss is a cached resource that is not used
         self.cache_misses = 0
 
-    def add_resource(self, resource: Resource, current_time: int=None):
+    def add_resource(self, resource: Resource, current_time: int = None):
         if current_time != None:
             resource.storage_time = current_time
          # check if there is space is cache
         if self.current_size_bytes + resource.size <= self.max_size_bytes:
             self.resources.append(resource)
             self.current_size_bytes += resource.size
-            #print(f"Resource {resource.provider_id} stored in cache.")
+            print(
+                f"Resource {resource.provider_id} stored in cache at {current_time} until {resource.expiration_time}.")
         else:
             # check if resource bytes is bigger than the maximum cache size
             if resource.size > self.max_size_bytes:
-                print(f'impossible to cache {resource.provider_id} since its size is bigger then the cache size')
+                print(
+                    f'impossible to cache {resource.provider_id} since its size is bigger then the cache size')
                 return
             # If cache is full, apply replacement strategy
             if self.replacement_strategy == CacheReplacementStrategy.LRU:
@@ -40,12 +42,11 @@ class Cache:
             else:
                 print(f"Error: Invalid replacement strategy.")
                 return
+
     def add_resource_per_description(self, provider_id: str, size_bytes: int, expiration_time, current_time):
         resource = Resource(provider_id, size_bytes,
                             current_time, expiration_time)
         self.add_resource(resource)
-
-       
 
     def _apply_lru_strategy(self):
         # Least Recently Used (LRU)
@@ -93,8 +94,8 @@ class Cache:
                 f"Resource {resource_to_remove.provider_id} removed from cache due to LFU strategy.")
 
     def remove_expired_resources(self, current_time: int):
-        self.resources = [resource for resource in self.resources if current_time -
-                          resource.storage_time <= resource.expiration_time]
+        #self.resources = [resource for resource in self.resources if current_time - resource.storage_time <= resource.expiration_time]
+        self.resources = [resource for resource in self.resources if current_time <= resource.expiration_time]
         self.current_size_bytes = sum(
             resource.size for resource in self.resources)
 
@@ -102,15 +103,15 @@ class Cache:
         self.request_received += 1
         for resource in self.resources:
             if resource.provider_id == provider_id:
-                if current_time - resource.storage_time <= resource.expiration_time:
-                    resource.frequency += 1
-                    resource.last_time_retrieved = current_time
-                    #print(f"Resource {provider_id} retrieved from cache.")
-                    self.cache_hits += 1
-                    return resource
-                else:
-                    #print(f"Resource {provider_id} not found in cache")
-                    return
+                # if current_time - resource.storage_time <= resource.expiration_time:
+                #if current_time <= resource.expiration_time:
+                resource.frequency += 1
+                resource.last_time_retrieved = current_time
+                #print(f"Resource {provider_id} retrieved from cache.")
+                self.cache_hits += 1
+                return resource
+        print(f"Resource {provider_id} not found in cache at {current_time}")
+        return
 
     def get_cache_hit_rate(self):
         if self.request_received == 0:
