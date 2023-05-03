@@ -11,8 +11,11 @@ import random
 
 
 class CacheManager:
-    def __init__(self, hit_rate=HIT_RATE):
+    def __init__(self, hit_rate=HIT_RATE, average_pre_request_time=DEFAULT_STD_PRE_REQUEST_TIME, std_pre_request_time=DEFAULT_STD_PRE_REQUEST_TIME, default_expiration_time=DEFAULT_EXPIRATION_TIME):
         self.hit_rate = hit_rate
+        self.average_pre_request_time = average_pre_request_time
+        self.std_pre_request_time = std_pre_request_time
+        self.default_expiration_time = default_expiration_time
         return
 
     def epoch_passed(self, current_time):
@@ -35,18 +38,23 @@ class CacheManager:
                 requests_per_cache_worker[i], key=lambda x: x.execution_time)
 
         # 2. according to a target_hit_rate, define the subset of resources to cache
-        caching_orders_per_cache_worker: List[List[CachingOrder]] = [[] for cache_worker in cache_workers]
+        caching_orders_per_cache_worker: List[List[CachingOrder]] = [
+            [] for cache_worker in cache_workers]
         for index, requests in enumerate(requests_per_cache_worker):
             for request in requests:
                 random_number = random.random()
                 if random_number <= self.hit_rate:
-                        
-                    random_pre_fetch_time = random.gauss(DEFAULT_AVG_PRE_REQUEST_TIME, DEFAULT_STD_PRE_REQUEST_TIME)
-                    execution_time = 0 if request.execution_time - random_pre_fetch_time < 0 else request.execution_time - random_pre_fetch_time
-                    expiration_time = random_pre_fetch_time + request.execution_time + DEFAULT_EXPIRATION_TIME
+
+                    random_pre_fetch_time = int(random.gauss(
+                        self.average_pre_request_time, self.std_pre_request_time))
+                    execution_time = 0 if request.execution_time - \
+                        random_pre_fetch_time < 0 else request.execution_time - random_pre_fetch_time
+                    expiration_time = random_pre_fetch_time + \
+                        request.execution_time + self.default_expiration_time
                     #print(f"request: {request.execution_time} - order: {execution_time} to {expiration_time}")
 
-                    new_caching_order = CachingOrder(cache_worker_id=cache_workers[index].id, execution_time=execution_time, expiration_time=expiration_time, provider=request.provider)
+                    new_caching_order = CachingOrder(
+                        cache_worker_id=cache_workers[index].id, execution_time=execution_time, expiration_time=expiration_time, provider=request.provider)
 
                     if not self.check_redundant_cache_order(request, caching_orders_per_cache_worker[index]):
                         caching_orders_per_cache_worker[index].append(
@@ -54,7 +62,6 @@ class CacheManager:
 
             caching_orders_per_cache_worker[index] = sorted(
                 caching_orders_per_cache_worker[index], key=lambda x: x.execution_time)
-
 
         # TODO: for cooperative: check all cache workers and detect when there is significant overlap, then swap standard for coop
         return caching_orders_per_cache_worker
