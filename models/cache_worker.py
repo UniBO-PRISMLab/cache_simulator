@@ -111,7 +111,6 @@ class CacheWorker:
         self.edge_node.cache.add_resource(resource, current_time)
 
     def _match(self, order: CachingOrder, provider_id: str):
-        # Check if order matches request request
         return order.provider.id == provider_id
 
     def get_from_cache_node(self, node: EdgeNode, provider_id: str, time_epoch: int):
@@ -132,14 +131,17 @@ class CacheWorker:
         self._store_data(new_resource, order.execution_time)
 
     def epoch_passed(self, current_time: int):
-        # TODO: improve this
         self.remove_expired_cooperative_orders(current_time)
+        
+        orders_to_be_removed = []
         for pending_resource in self.pending_orders:
-            if pending_resource.execution_time > current_time:
+            if pending_resource.execution_time >= current_time:
                 break
+            #print(f"Performing order for {pending_resource.provider.id} at {current_time} - from {pending_resource.execution_time} to {pending_resource.expiration_time}")
             self._store_pending_order(pending_resource)
-            self.pending_orders.remove(pending_resource)
-
+            orders_to_be_removed.append(pending_resource)
+        for order in orders_to_be_removed:
+            self.pending_orders.remove(order)
 
     def get_cache_hit_rate(self) -> float:
         if self.total_requests == 0:
