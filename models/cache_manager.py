@@ -45,8 +45,7 @@ class CacheManager:
                 random_number = random.random()
                 if random_number <= self.hit_rate:
 
-                    random_pre_fetch_time = int(random.gauss(
-                        self.average_pre_request_time, self.std_pre_request_time))
+                    random_pre_fetch_time = self.get_pre_fetch_time()
                     execution_time = 0 if request.execution_time - \
                         random_pre_fetch_time < 0 else request.execution_time - random_pre_fetch_time
                     expiration_time = random_pre_fetch_time + \
@@ -65,6 +64,11 @@ class CacheManager:
 
         # TODO: for cooperative: check all cache workers and detect when there is significant overlap, then swap standard for coop
         return caching_orders_per_cache_worker
+
+    def get_pre_fetch_time(self):
+        random_pre_fetch_time = random.gauss(
+            self.average_pre_request_time, self.std_pre_request_time)
+        return int(random_pre_fetch_time) if int(random_pre_fetch_time) > 0 else 1
 
     def check_redundant_cache_order(self, request: Request, caching_orders: List[CachingOrder]):
         for caching_order in caching_orders:
