@@ -1,7 +1,7 @@
 import math
 import random
 import matplotlib.pyplot as plt
-from typing import List
+from typing import List, Tuple
 from models.cache_worker import CacheWorker
 from models.edge_node import EdgeNode
 from models.enums.user_category import UserCategory
@@ -11,7 +11,8 @@ from parameters import AREA_DIMENSIONS, NUMBER_OF_USER_TYPES, USER_CATEGORY_DIST
 
 
 class User:
-    def __init__(self, id, start_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS, category_distribution=USER_CATEGORY_DISTRIBUTION, waypoints=USER_WAYPOINTS):
+    def __init__(self, id, start_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS,
+                 category_distribution=USER_CATEGORY_DISTRIBUTION, waypoints=USER_WAYPOINTS):
         self.id = id
         self.speed = Decimal(speed)
         self.area_dimension = area_dimension
@@ -19,11 +20,11 @@ class User:
         self.reached_end_position = False
         self.requests: List[Request] = []
         self.category_distribution = category_distribution
-        self.start_position: (Decimal | Decimal) = self.get_random_point(
+        self.start_position: Tuple[Decimal, Decimal] = self.get_random_point(
         ) if start_position is None else start_position
         self.waypoints = [self.get_random_point() for i in range(waypoints)]
         self.waypoint_index = 0
-        self.current_position: (Decimal | Decimal) = self.start_position
+        self.current_position: Tuple[Decimal, Decimal] = self.start_position
         self.category = self.choose_random_category()
         self.type = random.randint(
             0, NUMBER_OF_USER_TYPES) if self.category is UserCategory.TYPE else None
@@ -34,92 +35,38 @@ class User:
     def get_request(self):
         return self.requests.pop(0)
 
-    def _move_to_next_waypoint(self):
-        self.waypoint_index = (self.waypoint_index + 1) % len(self.waypoints)
-
-    # this movement is wrong. I am using it passing it time_epoch and I should get current_time - self.time_in_s
-    def _move(self, time_passed_in_s: Decimal):
-        # self.time_in_s += time_passed_in_s
-        reached_next_endpoint = True
-
-        while reached_next_endpoint:
-
-            # Calculate the distance and direction to the end position
-            dx = self.waypoints[self.waypoint_index][0] - \
-                self.current_position[0]
-            dy = self.waypoints[self.waypoint_index][1] - \
-                self.current_position[1]
-            distance = Decimal(math.sqrt(dx**2 + dy**2))
-            direction = (dx/distance, dy/distance)
-
-            # Calculate the maximum distance the user can move in this time step
-            max_distance = self.speed * time_passed_in_s
-            time_spent = max_distance / self.speed
-            self.time_in_s += time_spent
-
-            # Check if the user can reach the end position in this time step
-            if max_distance > distance:
-                # update position
-                self.current_position = self.waypoints[self.waypoint_index]
-                self._move_to_next_waypoint()
-                time_passed_in_s -= time_spent
-
-            else:
-                reached_next_endpoint = False
-                # Calculate the new position of the user based on their speed and the time passed
-                new_position = (self.current_position[0] + direction[0] * max_distance,
-                                self.current_position[1] + direction[1] * max_distance)
-
-                # Check if the new position is closer to the end position than the current position
-                new_dx = self.waypoints[self.waypoint_index][0] - \
-                    new_position[0]
-                new_dy = self.waypoints[self.waypoint_index][1] - \
-                    new_position[1]
-                new_distance = Decimal(math.sqrt(new_dx**2 + new_dy**2))
-                if new_distance < distance:
-                    # print(f'move towards end position - new position {new_position}')
-                    self.current_position = new_position
-
-        
-    def get_position_at_time(self, time_in_ms):
-        time_in_s = Decimal(time_in_ms) / Decimal(1000)
-        return self._get_position_at_time_in_s(time_in_s)
-
-    def _get_position_at_time_in_s(self, time_in_s: Decimal):
-        current_position = self.current_position
+    def _move(self, time_passed_in_ms: Decimal, apply_movement: bool = False):
+        #print(time_passed_in_ms)
+        position = self.current_position
         waypoint_index = self.waypoint_index
-        reached_next_endpoint = True
-        while reached_next_endpoint:
-            # Calculate the distance and direction to the end position
-            dx = self.waypoints[waypoint_index][0] - current_position[0]
-            dy = self.waypoints[waypoint_index][1] - current_position[1]
-            distance = Decimal(math.sqrt(dx**2 + dy**2))
-            direction = (dx/distance, dy/distance)
-            # Calculate the maximum distance the user can move in this time step
-            max_distance = self.speed * time_in_s
-
-            # Check if the user can reach the end position in this time step
-            if max_distance > distance:
-                time_spent = distance / self.speed
-                time_in_s -= time_spent
-                current_position = self.waypoints[waypoint_index]
+        distance_to_waypoint = self._distance_to(position, self.waypoints[self.waypoint_index])
+        total_movement = self.speed * time_passed_in_ms
+        while total_movement > 0:
+            if distance_to_waypoint <= total_movement:
+                #print(f"reached waypoint #{waypoint_index}: {self.waypoints[waypoint_index]}")
+                # Move to waypoint and update index
+                position = self.waypoints[waypoint_index]
                 waypoint_index = (waypoint_index + 1) % len(self.waypoints)
+                total_movement -= distance_to_waypoint
+                distance_to_waypoint = self._distance_to(position, self.waypoints[waypoint_index])
             else:
-                reached_next_endpoint = False
-                # Calculate the new position of the user based on their speed and the time passed
-                new_position = (current_position[0] + direction[0] * max_distance,
-                                current_position[1] + direction[1] * max_distance)
+                # Move towards waypoint
+                #print(f"old position: {position}")
+                position = self._move_towards(position, self.waypoints[waypoint_index], total_movement)
+                #print(f"new position: {position}")
 
-                # Check if the new position is closer to the end position than the current position
-                new_dx = self.waypoints[waypoint_index][0] - new_position[0]
-                new_dy = self.waypoints[waypoint_index][1] - new_position[1]
-                new_distance = Decimal(math.sqrt(new_dx**2 + new_dy**2))
+                if apply_movement:
+                    self.current_position = position
+                    self.waypoint_index = waypoint_index
+                return position
 
-                if new_distance < distance:
-                    # print(f'move towards end position - new position {new_position}')
-                    return new_position
-                print('new distance is bigger than previous one - possible error')
-                return self.current_position
+    def _calculate_distance_and_direction_to_endpoint(self, position, waypoint_index):
+        end_position = self.waypoints[waypoint_index]
+        dx = end_position[0] - position[0]
+        dy = end_position[1] - position[1]
+        distance = Decimal(math.sqrt(dx**2 + dy**2))
+        direction = (dx/distance, dy/distance)
+        return distance, direction
 
     def get_position(self):
         return self.current_position
@@ -139,11 +86,10 @@ class User:
         return x, y
 
     def get_closest_edge_node(self, edge_nodes: List[EdgeNode], time_epoch_in_ms: int = None):
-        time_epoch_in_s = Decimal(time_epoch_in_ms) / Decimal(1000)
-        time_epoch_in_s = self.time_in_s if time_epoch_in_s is None else time_epoch_in_s
+        time_epoch_in_ms = self.time_in_ms if time_epoch_in_ms is None else time_epoch_in_ms
         min_distance = Decimal('inf')
         closest_edge_node = None
-        user_position = self._get_position_at_time_in_s(time_epoch_in_s)
+        user_position = self._move(time_epoch_in_ms)
 
         for edge_node in edge_nodes:
             edge_node_position = edge_node.get_position()
@@ -175,13 +121,15 @@ class User:
 
         return closest_cache_worker_index
 
-    def closest_cache_worker_by_index_in_time(self, cache_workers: List[CacheWorker], time_epoch_in_ms: int) -> (int | None):
+    def closest_cache_worker_by_index_in_time(
+            self, cache_workers: List[CacheWorker],
+            time_epoch_in_ms: int) -> (
+            int | None):
         min_distance = Decimal('inf')
 
         closest_cache_worker_index = None
 
-        time_epoch_in_s = Decimal(time_epoch_in_ms) / Decimal(1000)
-        user_position = self._get_position_at_time_in_s(time_epoch_in_s)
+        user_position = self._move(time_epoch_in_ms)
 
         for index, cache_worker in enumerate(cache_workers):
             edge_node_position = cache_worker.edge_node.get_position()
@@ -219,9 +167,29 @@ class User:
         return None
 
     def epoch_passed(self, time_epoch_in_ms):
-        current_time_in_s = Decimal(time_epoch_in_ms)/Decimal(1000)
-        passed_time_in_s = current_time_in_s - self.time_in_s
-        self._move(passed_time_in_s)
+        passed_time_in_ms = time_epoch_in_ms - self.time_in_s
+        self.time_in_s = time_epoch_in_ms
+        self._move(passed_time_in_ms, True)
+
+    def get_position_at_time(self, time_in_ms):
+        return self._move(time_in_ms)
+
+    def _move_towards(self, current_position: Tuple[Decimal, Decimal],
+                      target_position: Tuple[Decimal, Decimal],
+                      total_distance: Decimal) -> Tuple[Decimal, Decimal]:
+        distance = self._distance_to(current_position, target_position)
+        if distance == 0:
+            return current_position
+        ratio = total_distance / distance
+        x = current_position[0] + (target_position[0] - current_position[0]) * ratio
+        y = current_position[1] + (target_position[1] - current_position[1]) * ratio
+        return (x, y)
+
+    def _distance_to(self, current_position, other_position):
+        dx = other_position[0] - current_position[0]
+        dy = other_position[1] - current_position[1]
+        distance = Decimal(math.sqrt(dx ** 2 + dy ** 2))
+        return distance
 
     def __str__(self):
         return f"User {self.id} - Current Position: {self.current_position} - Time: {self.time_in_s}"
