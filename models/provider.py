@@ -2,17 +2,37 @@ from models.bytes_and_time import bytes_and_time
 from models.enums.provider_type import ProviderType
 import random
 import string
+import os
 
-from parameters import PROVIDER_DISTRIBUTION
-
+from parameters import CLOUD_TRACE_PATH, PROVIDER_DISTRIBUTION
 
 class Provider:
-    def __init__(self, index: int, provider_type: ProviderType = None, provider_distribution=PROVIDER_DISTRIBUTION,):
+    def __init__(
+            self, index: int, provider_type: ProviderType = None, provider_distribution=PROVIDER_DISTRIBUTION,
+            path=CLOUD_TRACE_PATH):
         self.index = index
+        self.path = path
         self.id = self.generate_random_string()
         self.provider_distribution = provider_distribution
-
+        self.network_trace = self.assign_random_cloud_trace()
         self.provider_type = provider_type if provider_type != None else self.choose_random_provider_type()
+
+    def assign_random_cloud_trace(self) -> string:
+        # Get a list of all subdirectories in the path
+        subdirs = [d for d in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, d))]
+
+        # Choose a random subdirectory
+        random_subdir = random.choice(subdirs)
+
+        # Get a list of all files in the chosen subdirectory
+        files = [f for f in os.listdir(os.path.join(self.path, random_subdir))
+                 if os.path.isfile(os.path.join(self.path, random_subdir, f))]
+
+        # Choose a random file
+        random_file = random.choice(files)
+
+        # Return the relative path to the chosen file
+        return os.path.join(random_subdir, random_file)
 
     def choose_random_provider_type(self) -> ProviderType:
         """

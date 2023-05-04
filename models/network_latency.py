@@ -10,11 +10,9 @@ class NetworkLatency:
         self.seed = seed
         np.random.seed(seed=seed)
         random.seed(seed)
-
-        self.wireless = pd.read_csv(
-            f'{PATH_NETWORK}/LAN/filtered_ping_wireless.csv')
-        self.ethernet = pd.read_csv(
-            f'{PATH_NETWORK}/LAN/filtered_ping_ethernet.csv')
+        self.cloud = {}
+        self.wireless = pd.read_csv(f'{PATH_NETWORK}/LAN/filtered_ping_wireless.csv')
+        self.ethernet = pd.read_csv(f'{PATH_NETWORK}/LAN/filtered_ping_ethernet.csv')
         return
 
     # NetworkLatency is a singleton
@@ -31,10 +29,12 @@ class NetworkLatency:
         random_number = random.randint(0, len(self.ethernet))
         return self.ethernet['remote_avg'][random_number]
 
-    def random_cloud(self) -> int:
-        ''' NOT IMPLEMENTED
-        '''
-        return 10
+    def random_cloud(self, trace_file) -> int:
+        if not trace_file in self.cloud:
+            file_content = pd.read_csv(f'{PATH_NETWORK}/WAN/{trace_file}', delimiter="	")
+            self.cloud[trace_file] = file_content["latency_value[ms]"]
+        random_number = random.randint(0, len(self.cloud[trace_file]))
+        return self.cloud[trace_file][random_number]
 
 
 network_latency = NetworkLatency()
