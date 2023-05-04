@@ -24,8 +24,7 @@ class Cache:
         if self.current_size_bytes + resource.size <= self.max_size_bytes:
             self.resources.append(resource)
             self.current_size_bytes += resource.size
-            print(
-                f"Resource {resource.provider_id} stored in cache at {current_time} until {resource.expiration_time}.")
+            #print(f"Resource {resource.provider_id} stored in cache at {current_time} until {resource.expiration_time}.")
         else:
             # check if resource bytes is bigger than the maximum cache size
             if resource.size > self.max_size_bytes:
@@ -110,7 +109,7 @@ class Cache:
                 #print(f"Resource {provider_id} retrieved from cache.")
                 self.cache_hits += 1
                 return resource
-        print(f"Resource {provider_id} not found in cache at {current_time}")
+        print(f"*** Resource {provider_id} NOT FOUND in cache at {current_time} ***")
         return
 
     def get_cache_hit_rate(self):

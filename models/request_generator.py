@@ -1,6 +1,7 @@
 import random
 import math
 import hashlib
+import sys
 import numpy as np
 
 from typing import List, Tuple
@@ -33,7 +34,10 @@ class RequestGenerator:
         Responsible to generate the list of requests for each user
     """
 
-    def __init__(self, users: List[User], providers: List[Provider],  popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, seed=42):
+    def __init__(
+            self, users: List[User],
+            providers: List[Provider],
+            popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, seed=42):
         np.random.seed(seed=seed)
         random.seed(seed)
         self.providers = providers
@@ -56,7 +60,6 @@ class RequestGenerator:
         for user in self.users:
             current_time = 0
             while current_time <= self.experiment_duration:
-               
                 next_request_in_ms = self.next_event_time()
                 next_request_execution_time = next_request_in_ms + current_time
                 if next_request_execution_time >= self.experiment_duration:
@@ -83,12 +86,12 @@ class RequestGenerator:
         # Calculate the time of the next event using the inverse of the cumulative distribution function (CDF) of the exponential distribution
         time = -math.log(1 - u) / rate
         discrete_time = int(time)
-        if(discrete_time <= 0):
+        if (discrete_time <= 0):
             return self.next_event_time(rate)
         return int(time)
 
+    # solve time problem = user in s and rest in ms
 
-    #solve time problem = user in s and rest in ms
     def choose_provider_id(self, user: User, request_time: int) -> Provider:
         provider_index = np.random.zipf(a=self.popularity_distribution)
         if provider_index >= len(self.providers):
@@ -99,8 +102,12 @@ class RequestGenerator:
             return self.popularity[UserCategory.ID.value][user.id][provider_index]
         elif user.category == UserCategory.LOCATION:
             user_location = user.get_position_at_time(request_time)
-            user_subarea = self.find_subarea(
-                user_location, self.popularity[UserCategory.LOCATION.value])
+            
+            user_subarea = self.find_subarea(user_location, self.popularity[UserCategory.LOCATION.value])
+            if(user_subarea == -1):
+                print("error in user position")
+                print(user_location)
+                sys.exit()
             return user_subarea.popularity[provider_index]
         else:
             print(

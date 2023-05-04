@@ -56,9 +56,11 @@ def calculate_distance(point1: tuple, point2: tuple) -> float:
 
 
 def pass_time(time_epoch, users, cache_workers, edge_nodes):
-    for user in users:
-        user.epoch_passed(time_epoch)
     for cache_worker in cache_workers:
         cache_worker.epoch_passed(time_epoch)
     for edge_node in edge_nodes:
         edge_node.cache.epoch_passed(time_epoch)
+    for user in users:
+        user.epoch_passed(time_epoch)
+
+
