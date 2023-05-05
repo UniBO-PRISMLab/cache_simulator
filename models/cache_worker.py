@@ -21,6 +21,7 @@ class CacheWorker:
         self.total_requests = 0
         self.cached_requests = 0
         self.classical_caching = classical_caching
+        self.neighbor_resources = 0
         self.pending_orders: List[CachingOrder] = []
 
     def get_ordered_cache_nodes_by_distance(
@@ -76,8 +77,7 @@ class CacheWorker:
         # 2. check if request is mapped in a valid caching order
         for order in self.cooperative_orders:
             if self._match(order, request.provider.id):
-                request.resource = self.get_from_cache_node(
-                    order.cooperator_edge_node, request, time_epoch)
+                request.resource = self.get_from_cache_node(order.cooperator_edge_node, request, time_epoch)
                 request.network_latency += network_latency.random_ethernet()
                 if self._is_resource(request.resource):
                     return request
@@ -85,6 +85,7 @@ class CacheWorker:
         # 3. check if request is cache in N neighbor nodes
         request.resource = self._check_neighbor_nodes(request, time_epoch)
         if self._is_resource(request.resource):
+            self.neighbor_resources += 1
             return request
 
         # 4. finally, if the cache is not found, grab from the provider
@@ -102,7 +103,7 @@ class CacheWorker:
     def _check_neighbor_nodes(self, request, time_epoch):
         for cache_node in self.cache_nodes:
             #print(f"neighbor #{cache_node.id} of {self.edge_node.id} cached resources: {len(cache_node.cache.resources)}")
-            data = self.get_from_cache_node(cache_node, request, time_epoch)
+            data = self.get_from_cache_node(cache_node, request.provider.id, time_epoch)
             request.network_latency += network_latency.random_ethernet()
             if data is not None:
                 return data
