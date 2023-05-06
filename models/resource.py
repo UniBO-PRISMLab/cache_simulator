@@ -1,7 +1,8 @@
 class Resource:
-    def __init__(self, provider_id, size, storage_time=None, expiration_time=None):
+    def __init__(self, provider_id, size, storage_time=None, expiration_time=None, creation_time=None):
         self.provider_id = provider_id
         self.size = size
+        self.creation_time = creation_time
         self.storage_time = storage_time
         self.expiration_time = expiration_time
         self.frequency = 0

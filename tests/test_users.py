@@ -11,27 +11,27 @@ edge_nodes = [EdgeNode(i) for i in range(5)]
 
 class TestUserMobility(unittest.TestCase):
 
-    # def test_get_user_position_in_time(self):
-    #     error_tolerance = 1E-16
-    #     user = User(id=0)
-    #     test_experiment_time = 360000
-    #     predicted_movement = []
-    #     actual_movement = []
-    #     for time in range(test_experiment_time):
-    #         predicted_movement.append(user.get_position_at_time(time+1))
-    #     for time in range(test_experiment_time):
-    #         user.epoch_passed(time+1)
-    #         actual_movement.append(user.get_position())
+    def test_get_user_position_in_time(self):
+        error_tolerance = 1E-16
+        user = User(id=0)
+        test_experiment_time = 360000
+        predicted_movement = []
+        actual_movement = []
+        for time in range(test_experiment_time):
+            predicted_movement.append(user.get_position_at_time(time+1))
+        for time in range(test_experiment_time):
+            user.epoch_passed(time+1)
+            actual_movement.append(user.get_position())
 
-    #     self.assertEqual(len(actual_movement), len(predicted_movement))
+        self.assertEqual(len(actual_movement), len(predicted_movement))
 
-    #     for i in range(len(actual_movement)):
-    #         #print(f"actual: {actual_movement[i]} - predicted: {predicted_movement[i]}")
-    #         squared_error = ((actual_movement[i][0] - predicted_movement[i][0]) ** 2,
-    #                          ((actual_movement[i][1] - predicted_movement[i][1]) ** 2))
+        for i in range(len(actual_movement)):
+            #print(f"actual: {actual_movement[i]} - predicted: {predicted_movement[i]}")
+            squared_error = ((actual_movement[i][0] - predicted_movement[i][0]) ** 2,
+                             ((actual_movement[i][1] - predicted_movement[i][1]) ** 2))
 
-    #         self.assertGreater(error_tolerance, squared_error[0])
-    #         self.assertGreater(error_tolerance, squared_error[1])
+            self.assertGreater(error_tolerance, squared_error[0])
+            self.assertGreater(error_tolerance, squared_error[1])
 
     def test_user_predicted_and_real_edge(self):
         edge_nodes = [EdgeNode(i) for i in range(10)]

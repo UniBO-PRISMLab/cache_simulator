@@ -15,6 +15,7 @@ class Provider:
         self.id = self.generate_random_string()
         self.provider_distribution = provider_distribution
         self.network_trace = self.assign_random_cloud_trace()
+        self.number_of_requests = 0
         self.provider_type = provider_type if provider_type != None else self.choose_random_provider_type()
 
     def assign_random_cloud_trace(self) -> string:
@@ -79,6 +80,7 @@ class Provider:
         return bytes_and_time.get_bytes(self.provider_type)
 
     def get_latency_and_bytes(self):
+        self.number_of_requests += 1
         return (self.get_latency(), self.get_bytes())
 
     def __str__(self):

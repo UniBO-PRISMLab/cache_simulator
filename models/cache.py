@@ -42,11 +42,6 @@ class Cache:
                 print(f"Error: Invalid replacement strategy.")
                 return
 
-    def add_resource_per_description(self, provider_id: str, size_bytes: int, expiration_time, current_time):
-        resource = Resource(provider_id, size_bytes,
-                            current_time, expiration_time)
-        self.add_resource(resource)
-
     def _apply_lru_strategy(self):
         # Least Recently Used (LRU)
         if len(self.resources) <= 0:
@@ -109,7 +104,7 @@ class Cache:
                 #print(f"Resource {provider_id} retrieved from cache.")
                 self.cache_hits += 1
                 return resource
-        print(f"*** Resource {provider_id} NOT FOUND in cache at {current_time} ***")
+    #print(f"*** Resource {provider_id} NOT FOUND in cache at {current_time} ***")
         return
 
     def get_cache_hit_rate(self):

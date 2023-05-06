@@ -11,7 +11,6 @@ class Request:
         self.resource: Resource = None
         self.network_latency = 0
         self.application_latency = 0
-        self.returned_to_client = False
         self.execution_time = execution_time
         #self.cache_worker = cache_worker
 
@@ -25,9 +24,7 @@ class Request:
         Returns:
             float: The Age of Information (AoI) in ms.
         """
-        if not self.returned_to_client:
-            return
-        resource_time = self.resource.storage_time()
+        resource_time = self.resource.creation_time
         aoi = current_time - resource_time
         return aoi
 

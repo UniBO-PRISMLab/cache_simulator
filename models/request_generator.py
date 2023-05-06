@@ -97,7 +97,7 @@ class RequestGenerator:
         if provider_index >= len(self.providers):
             return self.choose_provider_id(user, request_time)
         if user.category == UserCategory.TYPE:
-            return self.popularity[UserCategory.TYPE.value][user.type][provider_index]
+            return self.popularity[UserCategory.TYPE.value][user.type - 1][provider_index]
         elif user.category == UserCategory.ID:
             return self.popularity[UserCategory.ID.value][user.id][provider_index]
         elif user.category == UserCategory.LOCATION:

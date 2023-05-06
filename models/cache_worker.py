@@ -67,7 +67,7 @@ class CacheWorker:
             order for order in self.cooperative_orders if order.expiration_time <= current_time]
 
     def request_data(self, request: Request, time_epoch: int):
-        #print(f"#{self.id} cached resources: {len(self.edge_node.cache.resources)}")
+        # print(f"#{self.id} cached resources: {len(self.edge_node.cache.resources)}")
         self.total_requests += 1
         request.network_latency += network_latency.random_wireless()
         request.resource = self.get_from_cache_node(self.edge_node, request.provider.id, time_epoch)
@@ -102,7 +102,7 @@ class CacheWorker:
 
     def _check_neighbor_nodes(self, request, time_epoch):
         for cache_node in self.cache_nodes:
-            #print(f"neighbor #{cache_node.id} of {self.edge_node.id} cached resources: {len(cache_node.cache.resources)}")
+            # print(f"neighbor #{cache_node.id} of {self.edge_node.id} cached resources: {len(cache_node.cache.resources)}")
             data = self.get_from_cache_node(cache_node, request.provider.id, time_epoch)
             request.network_latency += network_latency.random_ethernet()
             if data is not None:
@@ -121,15 +121,19 @@ class CacheWorker:
 
     def perform_request(self, request: Request, current_time):
         (application_latency, size) = request.provider.get_latency_and_bytes()
-        request.resource = Resource(request.provider.id, size, current_time, DEFAULT_EXPIRATION_TIME)
         request.network_latency += network_latency.random_cloud(request.provider.network_trace)
+        resource_creation_time = (application_latency) + (request.network_latency/2)
+        request.resource = Resource(request.provider.id, size, current_time,
+                                    DEFAULT_EXPIRATION_TIME, resource_creation_time)
         request.application_latency += application_latency
         return request
 
     def _store_pending_order(self, order: CachingOrder):
-        size = order.provider.get_latency()
-        new_resource = Resource(order.provider.id, size,
-                                order.execution_time, order.expiration_time)
+        (application_latency, size) = order.provider.get_latency_and_bytes()
+        cloud_latency = network_latency.random_cloud(order.provider.network_trace)
+        resource_creation_time = (application_latency) + (cloud_latency/2)
+        new_resource = Resource(order.provider.id, size, order.execution_time,
+                                order.expiration_time, resource_creation_time)
         self._store_data(new_resource, order.execution_time)
 
     def epoch_passed(self, current_time: int):
