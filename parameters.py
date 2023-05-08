@@ -44,4 +44,6 @@ RATE_OF_EVENT = 0.0001  # one event per 10 seconds according to a poisson distri
 NUMBER_OF_PROVIDERS = 500
 POPULARITY_DISTRIBUTION = 1.1
 CLOUD_TRACE_PATH = "./data/network_traces/WAN"
+PATH_BYTES = './data/bytes/'
+PATH_TIME = './data/waiting-time/'
 WRITE_IN_FILE = True

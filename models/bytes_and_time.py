@@ -4,9 +4,7 @@ import pandas as pd
 import numpy as np
 import random
 
-
-PATH_BYTES = './data/bytes/'
-PATH_TIME = './data/waiting-time/'
+from parameters import PATH_BYTES, PATH_TIME
 
 
 class BytesAndTime:
