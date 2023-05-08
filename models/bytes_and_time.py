@@ -1,10 +1,9 @@
 from models.enums.provider_type import ProviderType
 
 import pandas as pd
-import numpy as np
-import random
 
 from parameters import PATH_BYTES, PATH_TIME
+from shared.RandomGenerator import np_random
 
 
 class BytesAndTime:
@@ -15,12 +14,8 @@ class BytesAndTime:
     time = {ProviderType.LOW.value: [],
             ProviderType.MEDIUM.value: [], ProviderType.HIGH.value: []}
 
-    def __init__(self, seed=42):
-        self.seed = seed
-        np.random.seed(seed=seed)
+    def __init__(self):
         # read lines
-        random.seed(seed)
-        # pd.random.seed(seed)
         for label in self.labels:
             self.bytes[label] = pd.read_csv(
                 f'{PATH_BYTES}{label}.csv', usecols=['sc-bytes'])
@@ -35,13 +30,13 @@ class BytesAndTime:
         return cls.instance
 
     def get_bytes(self, workload: ProviderType) -> int:
-        random_number = np.random.randint(
+        random_number = np_random.randint(
             0, len(self.bytes[workload.value]) - 1)
         return int(self.bytes[workload.value]['sc-bytes'][random_number])
         # return self.bytes[workload].sample(random_state=self.seed).iloc[0].iloc[0]
 
     def get_time(self, workload: ProviderType) -> int:
-        random_number = random.randint(0, len(self.time[workload.value]) - 1)
+        random_number = np_random.randint(0, len(self.time[workload.value]) - 1)
         return int(self.time[workload.value]['time-taken'][random_number])
 
     def get_time_and_bytes(self, workload: ProviderType) -> tuple:

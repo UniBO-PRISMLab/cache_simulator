@@ -1,7 +1,6 @@
 import math
-import random
 from typing import List
-
+from shared.RandomGenerator import regular_random
 
 def generate_edge_node_position(dimension, min_distance, edge_nodes):
     """
@@ -16,8 +15,8 @@ def generate_edge_node_position(dimension, min_distance, edge_nodes):
         tuple: The randomly generated (x, y) position as a tuple.
     """
     while True:
-        x = random.randint(0, dimension)
-        y = random.randint(0, dimension)
+        x = regular_random.randint(0, dimension)
+        y = regular_random.randint(0, dimension)
 
         # Check if the generated (x, y) position is farther than min_distance from all other edge nodes
         if all(distance((x, y), edge_node.get_position()) >= min_distance for edge_node in edge_nodes):

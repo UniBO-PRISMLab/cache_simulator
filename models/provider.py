@@ -1,6 +1,6 @@
 from models.bytes_and_time import bytes_and_time
 from models.enums.provider_type import ProviderType
-import random
+from shared.RandomGenerator import regular_random
 import string
 import os
 
@@ -23,14 +23,14 @@ class Provider:
         subdirs = [d for d in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, d))]
 
         # Choose a random subdirectory
-        random_subdir = random.choice(subdirs)
+        random_subdir = regular_random.choice(subdirs)
 
         # Get a list of all files in the chosen subdirectory
         files = [f for f in os.listdir(os.path.join(self.path, random_subdir))
                  if os.path.isfile(os.path.join(self.path, random_subdir, f))]
 
         # Choose a random file
-        random_file = random.choice(files)
+        random_file = regular_random.choice(files)
 
         # Return the relative path to the chosen file
         return os.path.join(random_subdir, random_file)
@@ -43,7 +43,7 @@ class Provider:
             ProviderType: The chosen provider type.
         """
         # Generate a random value from a uniform distribution between 0 and 1
-        u = random.random()
+        u = regular_random.random()
 
         # Initialize cumulative probability
         cumulative_prob = 0
@@ -71,7 +71,7 @@ class Provider:
             str: The random string.
         """
         letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for _ in range(length))
+        return ''.join(regular_random.choice(letters) for _ in range(length))
 
     def get_latency(self):
         return bytes_and_time.get_time(self.provider_type)

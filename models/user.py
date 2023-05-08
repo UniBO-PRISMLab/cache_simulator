@@ -1,5 +1,5 @@
 import math
-import random
+from shared.RandomGenerator import regular_random
 import matplotlib.pyplot as plt
 from typing import List, Tuple
 from models.cache_worker import CacheWorker
@@ -26,7 +26,7 @@ class User:
         self.waypoint_index = 0
         self.current_position: Tuple[Decimal, Decimal] = self.start_position
         self.category = self.choose_random_category()
-        self.type = random.randint(
+        self.type = regular_random.randint(
             0, NUMBER_OF_USER_TYPES) if self.category is UserCategory.TYPE else None
 
     def check_request(self, time_in_ms):
@@ -80,8 +80,8 @@ class User:
         """
 
         # Choose a random grid index in the x and y directions
-        x = Decimal(random.randint(0, self.area_dimension - 1))
-        y = Decimal(random.randint(0, self.area_dimension - 1))
+        x = Decimal(regular_random.randint(0, self.area_dimension - 1))
+        y = Decimal(regular_random.randint(0, self.area_dimension - 1))
 
         return x, y
 
@@ -149,7 +149,7 @@ class User:
             UserCategory: The chosen user category.
         """
         # Generate a random value from a uniform distribution between 0 and 1
-        u = random.random()
+        u = regular_random.random()
 
         # Initialize cumulative probability
         cumulative_prob = 0

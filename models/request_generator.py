@@ -1,8 +1,7 @@
-import random
+from shared.RandomGenerator import regular_random, np_random
 import math
 import hashlib
 import sys
-import numpy as np
 
 from typing import List, Tuple
 from models.enums.provider_type import ProviderType
@@ -37,9 +36,7 @@ class RequestGenerator:
     def __init__(
             self, users: List[User],
             providers: List[Provider],
-            popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, seed=42):
-        np.random.seed(seed=seed)
-        random.seed(seed)
+            popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION):
         self.providers = providers
         self.experiment_duration = experiment_duration
         self.users = users
@@ -81,7 +78,7 @@ class RequestGenerator:
             int: The time of the next event in ms.
         """
         # Generate a random value from a uniform distribution between 0 and 1
-        u = random.random()
+        u = regular_random.random()
 
         # Calculate the time of the next event using the inverse of the cumulative distribution function (CDF) of the exponential distribution
         time = -math.log(1 - u) / rate
@@ -93,7 +90,7 @@ class RequestGenerator:
     # solve time problem = user in s and rest in ms
 
     def choose_provider_id(self, user: User, request_time: int) -> Provider:
-        provider_index = np.random.zipf(a=self.popularity_distribution)
+        provider_index = np_random.zipf(a=self.popularity_distribution)
         if provider_index >= len(self.providers):
             return self.choose_provider_id(user, request_time)
         if user.category == UserCategory.TYPE:
@@ -120,17 +117,17 @@ class RequestGenerator:
         return hashlib.sha256(plain_id.encode())
 
     def generate_popularity_per_type(self) -> List[List[Provider]]:
-        return [random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USER_TYPES)]
+        return [regular_random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USER_TYPES)]
 
     def generate_popularity_per_location(self) -> List[Area]:
         subareas = self.divide_square_area()
         for subarea in subareas:
-            subarea.popularity = random.sample(
+            subarea.popularity = regular_random.sample(
                 self.providers, len(self.providers))
         return subareas
 
     def generate_popularity_per_user(self) -> List[List[Provider]]:
-        return [random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USERS)]
+        return [regular_random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USERS)]
 
     def divide_square_area(self, dimensions: int = AREA_DIMENSIONS, portions: int = SUBAREAS) -> List[Area]:
         """
