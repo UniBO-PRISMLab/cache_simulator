@@ -91,7 +91,7 @@ class CacheWorker:
         # 4. finally, if the cache is not found, grab from the provider
         response = self.perform_request(request, time_epoch)
         if self.classical_caching:
-            self._store_data(response.resource)
+            self._store_data(response.resource, time_epoch)
         return response
 
     def _is_resource(self, resource):
