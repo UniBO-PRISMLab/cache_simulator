@@ -30,14 +30,15 @@ class MetricsCalculator:
             "number_of_requests_to_provider": None,
             "hit_rate": None,
         }
-        self.experiment_start_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.experiment_dir_path = os.path.join("experiments", self.experiment_start_time)
-        os.makedirs(self.experiment_dir_path)
+        if self.write_in_file:
+            self.experiment_start_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            self.experiment_dir_path = os.path.join("experiments", f"{EXPERIMENT_LABEL}_{self.experiment_start_time}")
+            os.makedirs(self.experiment_dir_path)
 
     def write_parameter_file(self):
         # Define the header row
         header_row = [
-            'EXPERIMENT_DURATION', 'EXPERIMENT_TYPE', 'NUMBER_OF_EDGE_NODES', 'NUMBER_OF_USERS', 'USER_SPEED',
+            'EXPERIMENT_DURATION', 'NUMBER_OF_EDGE_NODES', 'NUMBER_OF_USERS', 'USER_SPEED',
             'NUMBER_OF_PROVIDERS', 'AREA_DIMENSIONS', 'SUBAREAS', 'EDGE_NODE_MIN_DISTANCE', 'USER_WAYPOINTS',
             'NUMBER_OF_USER_TYPES', 'DEFAULT_AVG_PRE_REQUEST_TIME', 'DEFAULT_STD_PRE_REQUEST_TIME',
             'NEIGHBOR_EDGE_NODES', 'DEFAULT_EXPIRATION_TIME', 'CACHE_NOT_FOUND_RESOURCE', 'CACHE_DEFAULT_SIZE',
@@ -47,7 +48,7 @@ class MetricsCalculator:
 
         # Define the values to store
         values_row = [
-            EXPERIMENT_DURATION, EXPERIMENT_TYPE, NUMBER_OF_EDGE_NODES, NUMBER_OF_USERS, USER_SPEED,
+            EXPERIMENT_DURATION, NUMBER_OF_EDGE_NODES, NUMBER_OF_USERS, USER_SPEED,
             NUMBER_OF_PROVIDERS, AREA_DIMENSIONS, SUBAREAS, EDGE_NODE_MIN_DISTANCE, USER_WAYPOINTS,
             NUMBER_OF_USER_TYPES, DEFAULT_AVG_PRE_REQUEST_TIME, DEFAULT_STD_PRE_REQUEST_TIME, NEIGHBOR_EDGE_NODES,
             DEFAULT_EXPIRATION_TIME, CACHE_NOT_FOUND_RESOURCE, CACHE_DEFAULT_SIZE, HIT_RATE, MODE,
