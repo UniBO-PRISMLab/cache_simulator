@@ -57,10 +57,13 @@ parser.add_argument('--cloud_trace_path', type=str, default='./data/network_trac
 parser.add_argument('--path_bytes', type=str, default='./data/bytes/', help='Path for bytes')
 parser.add_argument('--path_time', type=str, default='./data/waiting-time/', help='Path for waiting time')
 parser.add_argument('--write_in_file', type=bool, default=True, help='Write results to file')
+parser.add_argument('--replications', type=int, default=2, help='Number of replications to execute of a single experiment (default: 1)')
+
 args = parser.parse_args()
 
 EXPERIMENT_DURATION = args.duration
 EXPERIMENT_LABEL = args.label
+REPLICATIONS = args.replications
 NUMBER_OF_EDGE_NODES = args.edge_nodes
 NUMBER_OF_USERS = args.users  # 100
 USER_SPEED = args.user_speed  # 1.42  # avg walking speed in m/s

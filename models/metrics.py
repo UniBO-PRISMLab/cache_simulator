@@ -33,7 +33,26 @@ class MetricsCalculator:
         if self.write_in_file:
             self.experiment_start_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             self.experiment_dir_path = os.path.join("experiments", f"{EXPERIMENT_LABEL}_{self.experiment_start_time}")
+            self.experiment_root_folder = os.path.join("experiments")
             os.makedirs(self.experiment_dir_path)
+
+    def reset(self):
+        self.to_store = {
+            "aoi": None,
+            "std_aoi": None,
+            "total_latency": None,
+            "std_total_latency": None,
+            "number_of_requests_to_provider": None,
+            "hit_rate": None,
+        }
+        self.metrics = {
+            "latency": {
+                "total": [],
+                "application": [],
+                "network": []
+            },
+            "aoi": []
+        }
 
     def write_parameter_file(self):
         # Define the header row
@@ -114,17 +133,35 @@ class MetricsCalculator:
         self.to_store["number_of_requests_to_provider"] = providers_requests
         print(f"number of requests to providers: {providers_requests}")
 
+    def write_file(self, filename, consolidated_data=False):
+        path = self.experiment_root_folder if consolidated_data else self.experiment_dir_path
+        file_path = os.path.join(path, filename)
+        file_exists = os.path.isfile(file_path)
+        with open(file_path, "a", newline="") as csv_file:
+            to_store = self.to_store.copy()
+            if (consolidated_data):
+                to_store["label"] = EXPERIMENT_LABEL
+            headers = list(to_store.keys())
+            writer = csv.DictWriter(csv_file, fieldnames=headers)
+            if not file_exists or os.stat(file_path).st_size == 0:
+                writer.writeheader()
+            writer.writerow(to_store)
+
     def calculate_metrics(self, cache_workers: List[CacheWorker], providers: List[Provider]):
         self.calculate_latency_metrics()
         self.calculate_requests_to_providers(providers)
         self.calculate_cache_worker_metrics(cache_workers)
         if self.write_in_file:
             self.write_parameter_file()
-            file_path = os.path.join(self.experiment_dir_path, "data.csv")
+            self.write_file("data.csv")
+            self.write_file("consolidated_data.csv", True)
+
+
+"""             file_path = os.path.join(self.experiment_dir_path, "data.csv")
             file_exists = os.path.isfile(file_path)
             with open(file_path, "a", newline="") as csv_file:
                 headers = list(self.to_store.keys())
                 writer = csv.DictWriter(csv_file, fieldnames=headers)
                 if not file_exists or os.stat(file_path).st_size == 0:
                     writer.writeheader()
-                writer.writerow(self.to_store)
+                writer.writerow(self.to_store) """
