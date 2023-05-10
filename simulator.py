@@ -10,7 +10,11 @@ from models.edge_node import EdgeNode
 from models.request_generator import RequestGenerator
 from models.user import User
 
-from parameters import AREA_DIMENSIONS, EDGE_NODE_MIN_DISTANCE, EXPERIMENT_DURATION, EXPERIMENT_TYPE, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS
+from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, EXPERIMENT_DURATION, HIT_RATE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS
+
+
+print(f"starting experiment with {HIT_RATE} hit rate")
+print(f"Cache resources not found is {CACHE_NOT_FOUND_RESOURCE} and neighbor nodes are: {NEIGHBOR_EDGE_NODES}")
 
 # 1. Initialize users
 users = [User(i) for i in range(NUMBER_OF_USERS)]
@@ -38,17 +42,16 @@ now = datetime.datetime.now()
 print(f"{now} - All edge nodes created")
 
 # 5. Initialize Cache Workers
-if EXPERIMENT_TYPE != "baseline":
-    cache_workers = [CacheWorker(i, edge_node, edge_nodes) for i, edge_node in enumerate(edge_nodes)]
-    now = datetime.datetime.now()
-    print(f"{now} - All cache workers created")
+cache_workers = [CacheWorker(i, edge_node, edge_nodes) for i, edge_node in enumerate(edge_nodes)]
+now = datetime.datetime.now()
+print(f"{now} - All cache workers created")
 
-    cache_manager = CacheManager()
-    caching_orders = cache_manager.generate_caching_orders(users, cache_workers)
-    now = datetime.datetime.now()
-    print(f"{now} - Caching orders created")
-    for index, cache_worker_orders in enumerate(caching_orders):
-        cache_workers[index].add_caching_orders(cache_worker_orders)
+cache_manager = CacheManager()
+caching_orders = cache_manager.generate_caching_orders(users, cache_workers)
+now = datetime.datetime.now()
+print(f"{now} - Caching orders created")
+for index, cache_worker_orders in enumerate(caching_orders):
+    cache_workers[index].add_caching_orders(cache_worker_orders)
 
 metrics_calculator = MetricsCalculator()
 # Start experiment TODO: make a queue of requests and only look those. No need to loop all user in all time epochs
