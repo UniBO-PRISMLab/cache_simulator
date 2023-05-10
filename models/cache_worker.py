@@ -122,7 +122,7 @@ class CacheWorker:
     def perform_request(self, request: Request, current_time):
         (application_latency, size) = request.provider.get_latency_and_bytes()
         request.network_latency += network_latency.random_cloud(request.provider.network_trace)
-        resource_creation_time = (application_latency) + (request.network_latency/2)
+        resource_creation_time = current_time - (request.network_latency/2)
         request.resource = Resource(request.provider.id, size, current_time,
                                     DEFAULT_EXPIRATION_TIME, resource_creation_time)
         request.application_latency += application_latency
