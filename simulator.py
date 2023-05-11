@@ -1,5 +1,4 @@
 import datetime
-import sys
 from models.cache_manager import CacheManager
 from models.cache_worker import CacheWorker
 from models.metrics import MetricsCalculator
@@ -10,11 +9,11 @@ from models.edge_node import EdgeNode
 from models.request_generator import RequestGenerator
 from models.user import User
 
-from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, EXPERIMENT_DURATION, HIT_RATE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS, WRITE_IN_FILE
+from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, ACCURACY, MODE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS, WRITE_IN_FILE
 
 
-print(f"starting experiment with {HIT_RATE} hit rate")
-print(f"Cache resources not found is {CACHE_NOT_FOUND_RESOURCE} and neighbor nodes are: {NEIGHBOR_EDGE_NODES}")
+print(f"starting experiment with {ACCURACY} accuracy")
+print(f"Cache resources not found is {CACHE_NOT_FOUND_RESOURCE} and neighbor nodes are {NEIGHBOR_EDGE_NODES}. Mode is {MODE.value}")
 if WRITE_IN_FILE:
     print("*** WILL WRITE RESULTS INTO FILES ***")
 metrics_calculator = MetricsCalculator()
@@ -68,7 +67,7 @@ for i in range(REPLICATIONS):
         pass_time(queue_element.time_epoch, queue_element.user, cache_workers, edge_nodes)
         response = queue_element.cache_worker.request_data(queue_element.request, queue_element.time_epoch)
         metrics_calculator.add_request(response, queue_element.time_epoch)
-        if i % 1000 == 0:
+        if i % 10000 == 0:
             print(f'{i} requests made from {total_number_of_requests}')
 
     metrics_calculator.calculate_metrics(cache_workers, providers)

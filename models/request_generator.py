@@ -107,8 +107,7 @@ class RequestGenerator:
                 sys.exit()
             return user_subarea.popularity[provider_index]
         else:
-            print(
-                f"Invalid user category {user.category} - cannot choose provider id")
+            print(f"Invalid user category {user.category} - cannot choose provider id")
             return
 
     @staticmethod

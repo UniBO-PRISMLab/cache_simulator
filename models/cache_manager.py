@@ -1,5 +1,4 @@
 
-import sys
 from typing import List
 
 from models.cache_worker import CacheWorker
