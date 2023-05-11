@@ -3,10 +3,14 @@ from typing import List
 
 from models.cache_worker import CacheWorker
 from models.caching_order import CachingOrder
+from models.queue_element import QueueElement
 from models.request import Request
+from models.simulation_queue import SIMULATION_QUEUE
 from models.user import User
 from parameters import DEFAULT_AVG_PRE_REQUEST_TIME, DEFAULT_STD_PRE_REQUEST_TIME, HIT_RATE, DEFAULT_EXPIRATION_TIME
 from shared.RandomGenerator import regular_random
+
+
 
 class CacheManager:
     def __init__(self, hit_rate=HIT_RATE, average_pre_request_time=DEFAULT_AVG_PRE_REQUEST_TIME,
@@ -23,15 +27,28 @@ class CacheManager:
         return self.generate_caching_orders()
 
     def generate_caching_orders(self, users: List[User], cache_workers: List[CacheWorker]):
+        """
+        Generate a List of caching orders according to the accuracy. 
+        *** ALSO GENERATES QUEUE ELEMENTS AND ADDS THOSE TO THE SIMULATION QUEUE ***
+
+        Parameters:
+        -----------
+        users : List[User]
+            The users with a list a requests.
+        cache_workers : List[CacheWorker]
+            A list of cache workers involved in the simulation.
+        """
         # 1. get all users order and separate orders per edge_node
         requests_per_cache_worker = [[] for cache_worker in cache_workers]
         for user in users:
             for request in user.requests:
-                random_number = regular_random.random()
-                if random_number <= self.hit_rate:
-                    closest_cache_worker = user.closest_cache_worker_by_index_in_time(
-                        cache_workers, request.execution_time)
-                    requests_per_cache_worker[closest_cache_worker].append(request)
+                    closest_cache_worker = user.closest_cache_worker_by_index_in_time(cache_workers, request.execution_time)
+                    queueElement = QueueElement(request, user, request.execution_time, cache_workers[closest_cache_worker])
+                    SIMULATION_QUEUE.add_element(queueElement)
+                    print(f"add element at {request.execution_time} to the queue. Now it has {len(SIMULATION_QUEUE.queue)} requests")
+                    random_number = regular_random.random()
+                    if random_number <= self.hit_rate:
+                        requests_per_cache_worker[closest_cache_worker].append(request)
 
         for i in range(len(requests_per_cache_worker)):
             requests_per_cache_worker[i] = sorted(requests_per_cache_worker[i], key=lambda x: x.execution_time)
