@@ -16,34 +16,20 @@ parser.add_argument('--subareas', type=int, default=5, help='Number of subareas 
 parser.add_argument('--edge-node-distance', type=int, default=1000, help='Minimum distance between edge nodes in meters (default: 1000)')
 parser.add_argument('--user-waypoints', type=int, default=10, help='Number of waypoints for each user (default: 10)')
 parser.add_argument('--user-types', type=int, default=5, help='Number of user types (default: 5)')
-parser.add_argument('--pre-req-time-avg', type=int, default=100,
-                    help='Average time between requests for each user in milliseconds (default: 100)')
-parser.add_argument('--pre-req-time-std', type=int, default=500,
-                    help='Standard deviation of time between requests for each user in milliseconds (default: 500)')
-parser.add_argument('--neighbor-edge-nodes', type=int, default=0,
-                    help='Number of neighboring edge nodes for each cache worker (default: 0)')
-parser.add_argument('--cache-expiration-time', type=int, default=600000,
-                    help='Default expiration time for cached resources in milliseconds (default: 600000)')
-parser.add_argument('--cache-not-found-resource', type=bool, default=False,
-                    help='Whether to cache not found resources (default: False)')
-parser.add_argument('--cache-size', type=float, default=4e+9,
-                    help='Maximum size of the cache in bytes (default: 4e+9)')
-parser.add_argument('--hit-rate', type=float, default=0.2,
-                    help='Initial hit rate of the cache (default: 0)')
-parser.add_argument('--cache-mode', type=str, default=CacheManagerMode.STANDARD_ONLY,
-                    help='Cache manager mode (default: standard_only)')
-parser.add_argument('--provider-high', type=float, default=0.333,
-                    help='Fraction of high-capacity providers (default: 0.333)')
-parser.add_argument('--provider-medium', type=float, default=0.333,
-                    help='Fraction of medium-capacity providers (default: 0.333)')
-parser.add_argument('--provider-low', type=float, default=0.334,
-                    help='Fraction of low-capacity providers (default: 0.334)')
-parser.add_argument('--user-distribution-id', type=float, default=0.333,
-                    help='Fraction of id-based users (default: 0.333)')
-parser.add_argument('--user-distribution-type', type=float, default=0.333,
-                    help='Fraction of type-based users (default: 0.333)')
-parser.add_argument('--user-distribution-location', type=float, default=0.334,
-                    help='Fraction of location-based user (default: 0.334)')
+parser.add_argument('--pre-req-time-avg', type=int, default=100, help='Average time between requests for each user in milliseconds (default: 100)')
+parser.add_argument('--pre-req-time-std', type=int, default=500, help='Standard deviation of time between requests for each user in milliseconds (default: 500')
+parser.add_argument('--neighbor-edge-nodes', type=int, default=0, help='Number of neighboring edge nodes for each cache worker (default: 0)')
+parser.add_argument('--cache-expiration-time', type=int, default=600000, help='Default expiration time for cached resources in milliseconds (default: 600000)')
+parser.add_argument('--cache-not-found-resource', type=bool, default=False, help='Whether to cache not found resources (default: False)')
+parser.add_argument('--cache-size', type=float, default=4e+9, help='Maximum size of the cache in bytes (default: 4e+9)')
+parser.add_argument('--accuracy', type=float, default=0.2,  help='Initial hit rate of the cache (default: 0)')
+parser.add_argument('--cache-mode', type=str, default="standard", help='Cache manager mode (default: standard)')
+parser.add_argument('--provider-high', type=float, default=0.333, help='Fraction of high-capacity providers (default: 0.333)')
+parser.add_argument('--provider-medium', type=float, default=0.333, help='Fraction of medium-capacity providers (default: 0.333)')
+parser.add_argument('--provider-low', type=float, default=0.334, help='Fraction of low-capacity providers (default: 0.334)')
+parser.add_argument('--user-distribution-id', type=float, default=0.333, help='Fraction of id-based users (default: 0.333)')
+parser.add_argument('--user-distribution-type', type=float, default=0.333, help='Fraction of type-based users (default: 0.333)')
+parser.add_argument('--user-distribution-location', type=float, default=0.334, help='Fraction of location-based user (default: 0.334)')
 parser.add_argument('--rate-of-event', type=float, default=0.0001, help='Rate of event')
 parser.add_argument('--number-of-providers', type=int, default=750, help='Number of providers')
 parser.add_argument('--popularity-distribution', type=float, default=1.1, help='Popularity distribution')
@@ -83,8 +69,8 @@ CACHE_NOT_FOUND_RESOURCE = args.cache_not_found_resource
 CACHE_DEFAULT_SIZE = args.cache_size
 
 # CACHE MANAGER METRICS
-HIT_RATE = args.hit_rate
-MODE = args.cache_mode
+ACCURACY = args.accuracy
+MODE = CacheManagerMode.STANDARD_ONLY if args.cache_mode == CacheManagerMode.STANDARD_ONLY.value else CacheManagerMode.COOPERATIVE
 
 # Request Generator
 PROVIDER_DISTRIBUTION = {
