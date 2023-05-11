@@ -12,7 +12,8 @@ from parameters import AREA_DIMENSIONS, NUMBER_OF_USER_TYPES, USER_CATEGORY_DIST
 
 class User:
     def __init__(self, id, start_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS,
-                 category_distribution=USER_CATEGORY_DISTRIBUTION, waypoints=USER_WAYPOINTS):
+                 category_distribution=USER_CATEGORY_DISTRIBUTION, waypoints=USER_WAYPOINTS,
+                 number_of_types=NUMBER_OF_USER_TYPES):
         self.id = id
         self.speed = Decimal(speed)
         self.area_dimension = area_dimension
@@ -26,8 +27,9 @@ class User:
         self.waypoint_index = 0
         self.current_position: Tuple[Decimal, Decimal] = self.start_position
         self.category = self.choose_random_category()
+        self.number_of_types = number_of_types
         self.type = regular_random.randint(
-            0, NUMBER_OF_USER_TYPES) if self.category is UserCategory.TYPE else None
+            0, self.number_of_types-1) if self.category is UserCategory.TYPE else None
 
     def check_request(self, time_in_ms):
         return (self.requests[0].execution_time == time_in_ms) if len(self.requests) > 0 else False
@@ -36,14 +38,12 @@ class User:
         return self.requests.pop(0)
 
     def _move(self, time_passed_in_ms: Decimal, apply_movement: bool = False):
-        #print(time_passed_in_ms)
         position = self.current_position
         waypoint_index = self.waypoint_index
         distance_to_waypoint = self._distance_to(position, self.waypoints[self.waypoint_index])
         total_movement = self.speed * time_passed_in_ms
         while total_movement > 0:
             if distance_to_waypoint <= total_movement:
-                #print(f"reached waypoint #{waypoint_index}: {self.waypoints[waypoint_index]}")
                 # Move to waypoint and update index
                 position = self.waypoints[waypoint_index]
                 waypoint_index = (waypoint_index + 1) % len(self.waypoints)
@@ -51,9 +51,7 @@ class User:
                 distance_to_waypoint = self._distance_to(position, self.waypoints[waypoint_index])
             else:
                 # Move towards waypoint
-                #print(f"old position: {position}")
                 position = self._move_towards(position, self.waypoints[waypoint_index], total_movement)
-                #print(f"new position: {position}")
 
                 if apply_movement:
                     self.current_position = position

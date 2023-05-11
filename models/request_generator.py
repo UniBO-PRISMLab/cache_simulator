@@ -36,16 +36,20 @@ class RequestGenerator:
     def __init__(
             self, users: List[User],
             providers: List[Provider],
-            popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION):
+            popularity_distribution=POPULARITY_DISTRIBUTION, experiment_duration=EXPERIMENT_DURATION, number_of_users = NUMBER_OF_USERS,number_of_types=NUMBER_OF_USER_TYPES):
         self.providers = providers
         self.experiment_duration = experiment_duration
         self.users = users
         self.popularity_distribution = popularity_distribution
+        self.number_of_types = number_of_types
+        self.number_of_users = number_of_users
         self.popularity = {
             UserCategory.TYPE.value: self.generate_popularity_per_type(),
             UserCategory.LOCATION.value: self.generate_popularity_per_location(),
             UserCategory.ID.value: self.generate_popularity_per_user()
         }
+
+
         self.generate_requests()
 
     def generate_requests(self):
@@ -116,7 +120,8 @@ class RequestGenerator:
         return hashlib.sha256(plain_id.encode())
 
     def generate_popularity_per_type(self) -> List[List[Provider]]:
-        return [regular_random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USER_TYPES)]
+        return [regular_random.sample(self.providers, len(self.providers)) for i in range(self.number_of_types)]
+        
 
     def generate_popularity_per_location(self) -> List[Area]:
         subareas = self.divide_square_area()
@@ -126,7 +131,7 @@ class RequestGenerator:
         return subareas
 
     def generate_popularity_per_user(self) -> List[List[Provider]]:
-        return [regular_random.sample(self.providers, len(self.providers)) for i in range(NUMBER_OF_USERS)]
+        return [regular_random.sample(self.providers, len(self.providers)) for i in range(self.number_of_users)]
 
     def divide_square_area(self, dimensions: int = AREA_DIMENSIONS, portions: int = SUBAREAS) -> List[Area]:
         """
