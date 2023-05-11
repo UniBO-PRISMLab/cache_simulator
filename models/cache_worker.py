@@ -128,10 +128,10 @@ class CacheWorker:
         request.application_latency += application_latency
         return request
 
-    def _store_pending_order(self, order: CachingOrder):
+    def _store_pending_order(self, order: CachingOrder, current_time: int):
         (application_latency, size) = order.provider.get_latency_and_bytes()
         cloud_latency = network_latency.random_cloud(order.provider.network_trace)
-        resource_creation_time = (application_latency) + (cloud_latency/2)
+        resource_creation_time = (current_time) - (cloud_latency/2)
         new_resource = Resource(order.provider.id, size, order.execution_time,
                                 order.expiration_time, resource_creation_time)
         self._store_data(new_resource, order.execution_time)
@@ -144,7 +144,7 @@ class CacheWorker:
             if pending_resource.execution_time >= current_time:
                 break
             #print(f"Performing order for {pending_resource.provider.id} at {current_time} - from {pending_resource.execution_time} to {pending_resource.expiration_time}")
-            self._store_pending_order(pending_resource)
+            self._store_pending_order(pending_resource, current_time)
             orders_to_be_removed.append(pending_resource)
         for order in orders_to_be_removed:
             self.pending_orders.remove(order)
