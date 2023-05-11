@@ -66,8 +66,6 @@ for i in range(REPLICATIONS):
     total_number_of_requests = len(SIMULATION_QUEUE.queue)
     for i, queue_element in enumerate(SIMULATION_QUEUE.queue):
         pass_time(queue_element.time_epoch, queue_element.user, cache_workers, edge_nodes)
-        # get the request and the closest edge node
-
         response = queue_element.cache_worker.request_data(queue_element.request, queue_element.time_epoch)
         metrics_calculator.add_request(response, queue_element.time_epoch)
         if i % 1000 == 0:
