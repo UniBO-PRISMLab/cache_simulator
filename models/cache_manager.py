@@ -45,7 +45,6 @@ class CacheManager:
                     closest_cache_worker = user.closest_cache_worker_by_index_in_time(cache_workers, request.execution_time)
                     queueElement = QueueElement(request, user, request.execution_time, cache_workers[closest_cache_worker])
                     SIMULATION_QUEUE.add_element(queueElement)
-                    print(f"add element at {request.execution_time} to the queue. Now it has {len(SIMULATION_QUEUE.queue)} requests")
                     random_number = regular_random.random()
                     if random_number <= self.hit_rate:
                         requests_per_cache_worker[closest_cache_worker].append(request)
