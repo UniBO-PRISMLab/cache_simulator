@@ -8,11 +8,13 @@ from models.edge_node import EdgeNode
 from models.request_generator import RequestGenerator
 from models.user import User
 
-from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, EXPERIMENT_DURATION, HIT_RATE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS
+from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, EXPERIMENT_DURATION, HIT_RATE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS, WRITE_IN_FILE
 
 
 print(f"starting experiment with {HIT_RATE} hit rate")
 print(f"Cache resources not found is {CACHE_NOT_FOUND_RESOURCE} and neighbor nodes are: {NEIGHBOR_EDGE_NODES}")
+if WRITE_IN_FILE:
+    print("*** WILL WRITE RESULTS INTO FILES ***")
 metrics_calculator = MetricsCalculator()
 
 for i in range(REPLICATIONS):
@@ -69,5 +71,4 @@ for i in range(REPLICATIONS):
                 metrics_calculator.add_request(response, time_epoch)
         if time_epoch % 60000 == 0:
             print(f'{time_epoch//1000}s passed from {EXPERIMENT_DURATION//1000}')
-
     metrics_calculator.calculate_metrics(cache_workers, providers)
