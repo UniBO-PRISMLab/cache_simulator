@@ -64,36 +64,13 @@ for i in range(REPLICATIONS):
     now = datetime.datetime.now()
     print(f"{now} - Simulation Queue sorted")
     total_number_of_requests = len(SIMULATION_QUEUE.queue)
-    previous_time_epoch = 0
     for i, queue_element in enumerate(SIMULATION_QUEUE.queue):
-        if(previous_time_epoch > queue_element.time_epoch):
-            print("NON ORDERER")
-            sys.exit(1)
         pass_time(queue_element.time_epoch, queue_element.user, cache_workers, edge_nodes)
         # get the request and the closest edge node
-        request = queue_element.user.get_request()
-        if(request.execution_time != queue_element.time_epoch):
-            print("ERROR!!!!!!!")
-            sys.exit(1)
+
         response = queue_element.cache_worker.request_data(queue_element.request, queue_element.time_epoch)
         metrics_calculator.add_request(response, queue_element.time_epoch)
         if i % 1000 == 0:
             print(f'{i} requests made from {total_number_of_requests}')
-    
 
-    """  # Start experiment TODO: make a queue of requests and only look those. No need to loop all user in all time epochs
-    for time_epoch in range(EXPERIMENT_DURATION):
-        # every time epoch loop all users
-        for user in users:
-            # check if there is a request in the given time_epoch
-            if user.check_request(time_epoch):
-                # perform the time epoch operations in the other classes
-                pass_time(time_epoch, user, cache_workers, edge_nodes)
-                # get the request and the closest edge node
-                request = user.get_request()
-                closest_cache_worker = user.closest_cache_worker(cache_workers)
-                response = closest_cache_worker.request_data(request, time_epoch)
-                metrics_calculator.add_request(response, time_epoch)
-        if time_epoch % 60000 == 0:
-            print(f'{time_epoch//1000}s passed from {EXPERIMENT_DURATION//1000}') """
     metrics_calculator.calculate_metrics(cache_workers, providers)
