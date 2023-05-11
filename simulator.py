@@ -1,8 +1,10 @@
 import datetime
+import sys
 from models.cache_manager import CacheManager
 from models.cache_worker import CacheWorker
 from models.metrics import MetricsCalculator
 from models.provider import Provider
+from models.simulation_queue import SIMULATION_QUEUE
 from shared.helper import generate_edge_node_position, pass_time
 from models.edge_node import EdgeNode
 from models.request_generator import RequestGenerator
@@ -18,7 +20,9 @@ if WRITE_IN_FILE:
 metrics_calculator = MetricsCalculator()
 
 for i in range(REPLICATIONS):
+    # 0. reset everything before the simulation
     metrics_calculator.reset()
+    SIMULATION_QUEUE.reset()
     # 1. Initialize users
     users = [User(i) for i in range(NUMBER_OF_USERS)]
     now = datetime.datetime.now()
@@ -56,19 +60,15 @@ for i in range(REPLICATIONS):
     for index, cache_worker_orders in enumerate(caching_orders):
         cache_workers[index].add_caching_orders(cache_worker_orders)
 
-    # Start experiment TODO: make a queue of requests and only look those. No need to loop all user in all time epochs
-    for time_epoch in range(EXPERIMENT_DURATION):
-        # every time epoch loop all users
-        for user in users:
-            # check if there is a request in the given time_epoch
-            if user.check_request(time_epoch):
-                # perform the time epoch operations in the other classes
-                pass_time(time_epoch, user, cache_workers, edge_nodes)
-                # get the request and the closest edge node
-                request = user.get_request()
-                closest_cache_worker = user.closest_cache_worker(cache_workers)
-                response = closest_cache_worker.request_data(request, time_epoch)
-                metrics_calculator.add_request(response, time_epoch)
-        if time_epoch % 60000 == 0:
-            print(f'{time_epoch//1000}s passed from {EXPERIMENT_DURATION//1000}')
+    SIMULATION_QUEUE.sort_queue()
+    now = datetime.datetime.now()
+    print(f"{now} - Simulation Queue sorted")
+    total_number_of_requests = len(SIMULATION_QUEUE.queue)
+    for i, queue_element in enumerate(SIMULATION_QUEUE.queue):
+        pass_time(queue_element.time_epoch, queue_element.user, cache_workers, edge_nodes)
+        response = queue_element.cache_worker.request_data(queue_element.request, queue_element.time_epoch)
+        metrics_calculator.add_request(response, queue_element.time_epoch)
+        if i % 1000 == 0:
+            print(f'{i} requests made from {total_number_of_requests}')
+
     metrics_calculator.calculate_metrics(cache_workers, providers)
