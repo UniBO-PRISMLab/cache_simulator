@@ -6,22 +6,16 @@ from models.enums.user_category import UserCategory
 
 parser = argparse.ArgumentParser(description='Description of your script')
 
-parser.add_argument('--duration', type=int, default=3600000,
-                    help='Duration of the experiment in milliseconds (default: 3600000)')
-parser.add_argument('--label', type=str, default='baseline',
-                    help='Label of the experiment (default: baseline)')
+parser.add_argument('--duration', type=int, default=3600000, help='Duration of the experiment in milliseconds (default: 3600000)')
+parser.add_argument('--label', type=str, default='baseline', help='Label of the experiment (default: baseline)')
 parser.add_argument('--edge-nodes', type=int, default=10, help='Number of edge nodes (default: 10)')
-parser.add_argument('--users', type=int, default=500,                    help='Number of users (default: 500)')
-parser.add_argument('--user-speed', type=float, default=10,
-                    help='Average speed of the users in m/s (default: 10)')
-parser.add_argument('--area-dimensions', type=int, default=100000000,
-                    help='Area dimensions in square meters (default: 100000000)')
+parser.add_argument('--users', type=int, default=500, help='Number of users (default: 500)')
+parser.add_argument('--user-speed', type=float, default=10, help='Average speed of the users in m/s (default: 10)')
+parser.add_argument('--area-dimensions', type=int, default=100000000, help='Area dimensions in square meters (default: 100000000)')
 parser.add_argument('--subareas', type=int, default=5, help='Number of subareas (default: 5)')
-parser.add_argument('--edge-node-distance', type=int, default=1000,
-                    help='Minimum distance between edge nodes in meters (default: 1000)')
-parser.add_argument('--user-waypoints', type=int, default=10,
-                    help='Number of waypoints for each user (default: 10)')
-parser.add_argument('--user-types', type=int, default=1,                    help='Number of user types (default: 1)')
+parser.add_argument('--edge-node-distance', type=int, default=1000, help='Minimum distance between edge nodes in meters (default: 1000)')
+parser.add_argument('--user-waypoints', type=int, default=10, help='Number of waypoints for each user (default: 10)')
+parser.add_argument('--user-types', type=int, default=5, help='Number of user types (default: 5)')
 parser.add_argument('--pre-req-time-avg', type=int, default=100,
                     help='Average time between requests for each user in milliseconds (default: 100)')
 parser.add_argument('--pre-req-time-std', type=int, default=500,
@@ -50,14 +44,14 @@ parser.add_argument('--user-distribution-type', type=float, default=0.333,
                     help='Fraction of type-based users (default: 0.333)')
 parser.add_argument('--user-distribution-location', type=float, default=0.334,
                     help='Fraction of location-based user (default: 0.334)')
-parser.add_argument('--rate_of_event', type=float, default=0.0001, help='Rate of event')
-parser.add_argument('--number_of_providers', type=int, default=750, help='Number of providers')
-parser.add_argument('--popularity_distribution', type=float, default=1.1, help='Popularity distribution')
-parser.add_argument('--cloud_trace_path', type=str, default='./data/network_traces/WAN', help='Cloud trace path')
-parser.add_argument('--path_bytes', type=str, default='./data/bytes/', help='Path for bytes')
-parser.add_argument('--path_time', type=str, default='./data/waiting-time/', help='Path for waiting time')
-parser.add_argument('--write_in_file', type=bool, default=True, help='Write results to file')
-parser.add_argument('--replications', type=int, default=2, help='Number of replications to execute of a single experiment (default: 1)')
+parser.add_argument('--rate-of-event', type=float, default=0.0001, help='Rate of event')
+parser.add_argument('--number-of-providers', type=int, default=750, help='Number of providers')
+parser.add_argument('--popularity-distribution', type=float, default=1.1, help='Popularity distribution')
+parser.add_argument('--cloud-trace-path', type=str, default='./data/network_traces/WAN', help='Cloud trace path')
+parser.add_argument('--path-bytes', type=str, default='./data/bytes/', help='Path for bytes')
+parser.add_argument('--path-time', type=str, default='./data/waiting-time/', help='Path for waiting time')
+parser.add_argument('--write-in-file', type=bool, default=False, help='Write results to file')
+parser.add_argument('--replications', type=int, default=1, help='Number of replications to execute of a single experiment (default: 1)')
 
 args = parser.parse_args()
 
