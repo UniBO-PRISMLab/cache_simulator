@@ -100,11 +100,11 @@ class User:
 
         return closest_edge_node
 
-    def closest_cache_worker(self, cache_workers: List[CacheWorker]) -> (CacheWorker | None):
+    def closest_cache_worker(self, cache_workers: List[CacheWorker]):
         cache_worker_id = self.closest_cache_worker_by_id(cache_workers)
         return cache_workers[cache_worker_id]
 
-    def closest_cache_worker_by_id(self, cache_workers: List[CacheWorker]) -> (CacheWorker | None):
+    def closest_cache_worker_by_id(self, cache_workers: List[CacheWorker]):
         min_distance = Decimal('inf')
         closest_cache_worker_index = None
         user_position = self.current_position
