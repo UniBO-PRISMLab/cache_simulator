@@ -14,7 +14,7 @@ class Request:
         self.execution_time = execution_time
         #self.cache_worker = cache_worker
 
-    def calculate_aoi(self, current_time) -> (float | None):
+    def calculate_aoi(self, current_time):
         """
         Calculates the Age of Information (AoI) if the request was already returned to the client given the current time.
 
