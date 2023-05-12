@@ -1,5 +1,7 @@
 import unittest
 
+from models.enums.user_category import UserCategory
+
 from ..models.provider import Provider
 from ..models.request_generator import RequestGenerator
 from ..models.user import User
@@ -44,6 +46,22 @@ class TestSquareArea(unittest.TestCase):
         area = request_generator.find_subarea((8, 9), subareas)
         self.assertEqual(area.id, 3)
 
+    def test_users_popularity_distribution(self):
+        user_category_distribution = {
+            UserCategory.ID:1,
+            UserCategory.TYPE: 0,
+            UserCategory.LOCATION: 0,
+        }
+        users = [User(category_distribution=user_category_distribution) for i in range(2)]
+        providers = [Provider(i) for i in range(1000)]
+        request_generator = RequestGenerator(users, providers, 10, 100000)
+        users = request_generator.users
+        for user in users:
+            for request in user.requests:
+                print(request)
+        
+        
+        pass 
 
 if __name__ == '__main__':
     unittest.main()
