@@ -121,8 +121,7 @@ class User:
 
     def closest_cache_worker_by_index_in_time(
             self, cache_workers: List[CacheWorker],
-            time_epoch_in_ms: int) -> (
-            int | None):
+            time_epoch_in_ms: int):
         min_distance = Decimal('inf')
 
         closest_cache_worker_index = None
