@@ -1,5 +1,4 @@
 import subprocess
-
 replications = 30
 labels_of_already_done_experiments = ["accuracy-0-N0-standard-cache-mode-mix",
                                       "accuracy-0-N1-standard-cache-mode-mix",
@@ -28,7 +27,7 @@ for accuracy in accuracy_list:
                     label = f"accuracy-{accuracy*100}-N{neighbor_edge_nodes}-{cache_mode}-"
                     if (cache_not_found):
                         label += "cache-mode-"
-                    elif (user_distribution['id'] == 1):
+                    if (user_distribution['id'] == 1):
                         label += "id"
                     elif (user_distribution['location'] == 1):
                         label += "location"
@@ -36,9 +35,9 @@ for accuracy in accuracy_list:
                         label += "type"
                     else:
                         label += "mix"
-                    if (not label in labels_of_already_done_experiments):
+                    if (not label in labels_of_already_done_experiments and not (accuracy == 0 and cache_mode == "cooperative")):
                         # Define command to run simulation with current parameter settings
-                        command = f"python3 simulator.py --label \"{label}\" --accuracy {accuracy} --cache-not-found-resource {cache_not_found} --neighbor-edge-nodes {neighbor_edge_nodes} --cache-mode \"{cache_mode}\" --replications {replications} --user-distribution-id {user_distribution['id']} --user-distribution-type {user_distribution['type']} --user-distribution-location {user_distribution['location']}"
+                        command = f"python3 simulator.py --label \"{label}\" --accuracy {accuracy} --cache-not-found-resource {cache_not_found} --neighbor-edge-nodes {neighbor_edge_nodes} --cache-mode \"{cache_mode}\" --replications {replications} --user-distribution-id {user_distribution['id']} --user-distribution-type {user_distribution['type']} --user-distribution-location {user_distribution['location']} --write-in-file True"
                         # Print current parameter settings
                         print(command)
                         # Execute command and print output
