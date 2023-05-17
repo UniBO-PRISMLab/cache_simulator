@@ -14,7 +14,7 @@ cache_not_found_list = [True, False]  # 2
 neighbor_edge_nodes_list = [0, 1, 2]  # 3
 cache_mode_list = ["standard", "cooperative"]  # 2
 user_distributions = [  # 4
-    {"id": 0.33, "type": 0.33, "location": 0.33},
+    {"id": 0.333, "type": 0.333, "location": 0.334},
     {"id": 1, "type": 0, "location": 0},
     {"id": 0, "type": 1, "location": 0},
     {"id": 0, "type": 0, "location": 1}]

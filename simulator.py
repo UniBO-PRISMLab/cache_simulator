@@ -1,6 +1,7 @@
 import datetime
 from models.cache_manager import CacheManager
 from models.cache_worker import CacheWorker
+from models.enums.user_category import UserCategory
 from models.metrics import MetricsCalculator
 from models.provider import Provider
 from models.simulation_queue import SIMULATION_QUEUE
@@ -9,11 +10,12 @@ from models.edge_node import EdgeNode
 from models.request_generator import RequestGenerator
 from models.user import User
 
-from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, ACCURACY, MODE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS, WRITE_IN_FILE
+from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, ACCURACY, MODE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS, USER_CATEGORY_DISTRIBUTION, WRITE_IN_FILE
 
 
 print(f"starting experiment with {ACCURACY} accuracy")
 print(f"Cache resources not found is {CACHE_NOT_FOUND_RESOURCE} and neighbor nodes are {NEIGHBOR_EDGE_NODES}. Mode is {MODE.value}")
+print(f"user distributions: id - {USER_CATEGORY_DISTRIBUTION[UserCategory.ID]}, location  - {USER_CATEGORY_DISTRIBUTION[UserCategory.LOCATION]}, type - {USER_CATEGORY_DISTRIBUTION[UserCategory.TYPE]}")
 if WRITE_IN_FILE:
     print("*** WILL WRITE RESULTS INTO FILES ***")
 metrics_calculator = MetricsCalculator()
