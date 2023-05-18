@@ -68,10 +68,8 @@ class CacheManager:
                 new_caching_order = CachingOrder(
                     cache_worker_id=cache_workers[index].id, execution_time=execution_time,
                     expiration_time=expiration_time, provider=request.provider,
-                    request_execution_time=request.execution_time)
-
-                if not self.check_redundant_cache_order(request, caching_orders_per_cache_worker[index]):
-                    caching_orders_per_cache_worker[index].append(new_caching_order)
+                    request_execution_time=request.execution_time)               
+                caching_orders_per_cache_worker[index].append(new_caching_order)
 
             caching_orders_per_cache_worker[index] = sorted(
                 caching_orders_per_cache_worker[index],
@@ -82,6 +80,13 @@ class CacheManager:
                 for order in caching_orders_per_cache_worker[cache_worker_index]:
                     order = self.check_cooperative_cache_order(
                         order, caching_orders_per_cache_worker, cache_worker_index, cache_workers)
+
+        for index in range(len(caching_orders_per_cache_worker)):
+            clean_cache_worker_orders = []
+            for order in caching_orders_per_cache_worker[index]:
+                if not self.check_redundant_cache_order(order, clean_cache_worker_orders):
+                    clean_cache_worker_orders.append(order)
+            caching_orders_per_cache_worker[index] = clean_cache_worker_orders
 
         return caching_orders_per_cache_worker
 
@@ -108,6 +113,8 @@ class CacheManager:
         CachingOrder
             modified version of target_order if it can be cooperative, unmodified order otherwise.
         """
+        if (target_order.is_cooperator_pointer):
+            return target_order
         for i, cache_worker_orders in enumerate(caching_orders_per_cache_worker):
             if i != cache_worker_index:
                 for order in cache_worker_orders:
@@ -117,6 +124,7 @@ class CacheManager:
                         target_order.type = OrderType.COOPERATIVE
                         target_order.cooperator_edge_node = cache_workers[i].edge_node
                         target_order.expiration_time = order.expiration_time if target_order.expiration_time > order.expiration_time else target_order.expiration_time
+                        order.is_cooperator_pointer = True
                         return target_order
         return target_order
 
@@ -125,9 +133,8 @@ class CacheManager:
             self.average_pre_request_time, self.std_pre_request_time)
         return int(random_pre_fetch_time) if int(random_pre_fetch_time) > 0 else 1
 
-    def check_redundant_cache_order(self, request: Request, caching_orders: List[CachingOrder]):
-        # TODO: just check the ones that make sense looking at the execution time (that should be ordered)
+    def check_redundant_cache_order(self, order: CachingOrder, caching_orders: List[CachingOrder]):
         for caching_order in caching_orders:
-            if request.provider.id == caching_order.provider.id and request.execution_time > caching_order.execution_time and request.execution_time < caching_order.expiration_time:
+            if order.provider.id == caching_order.provider.id and order.request_execution_time > caching_order.execution_time and order.request_execution_time < caching_order.expiration_time and not order.is_cooperator_pointer:
                 return True
         return False
