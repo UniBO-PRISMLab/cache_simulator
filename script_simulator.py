@@ -26,10 +26,10 @@ def read_file_and_print(filename):
 
 labels_of_already_done_experiments = labels_of_already_done_experiments + read_file_and_print("./experiments/files.out")
 # Define list of parameters to vary
-accuracy_list = [0, 0.2, 0.4]  # 3
-cache_not_found_list = [True]#, False]  # 2
+accuracy_list = [0.2, 0.4]  # 3
+cache_not_found_list = [True] # 2
 neighbor_edge_nodes_list = [0, 1, 2]  # 3
-cache_mode_list = ["standard"]#, "cooperative"]  # 2
+cache_mode_list = ["cooperative"]  # 2
 user_distributions = [  # 4
     {"id": 0.333, "type": 0.333, "location": 0.334},
     {"id": 1, "type": 0, "location": 0},
@@ -41,7 +41,7 @@ for accuracy in accuracy_list:
         for neighbor_edge_nodes in neighbor_edge_nodes_list:
             for cache_mode in cache_mode_list:
                 for user_distribution in user_distributions:
-                    label = f"accuracy-{accuracy*100}-N{neighbor_edge_nodes}-{cache_mode}-"
+                    label = f"v3acuracy-{accuracy*100}-N{neighbor_edge_nodes}-{cache_mode}-"
                     if (cache_not_found):
                         label += "cache-mode-"
                     if (user_distribution['id'] == 1):
