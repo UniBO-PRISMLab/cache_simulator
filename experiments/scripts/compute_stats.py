@@ -11,7 +11,7 @@ def calculate_margin_error(x, confidence_level=0.99):
 
 
 # Read the CSV file into a pandas DataFrame
-data = pd.read_csv('../consolidated_data.csv')
+data = pd.read_csv('../consolidated_data2.csv')
 
 # Group the data by the 'label' column
 grouped_data = data.groupby('label')
