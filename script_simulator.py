@@ -26,13 +26,13 @@ def read_file_and_print(filename):
 
 labels_of_already_done_experiments = labels_of_already_done_experiments + read_file_and_print("./experiments/files.out")
 # Define list of parameters to vary
-accuracy_list = [0.2, 0.4]  # 3
+accuracy_list = [0.4]  # 3
 cache_not_found_list = [True] # 2
-neighbor_edge_nodes_list = [0, 1, 2]  # 3
-cache_mode_list = ["cooperative"]  # 2
+neighbor_edge_nodes_list = [2]  # 3
+cache_mode_list = ["standard"]  # 2
 user_distributions = [  # 4
-    {"id": 0.333, "type": 0.333, "location": 0.334},
-    {"id": 1, "type": 0, "location": 0},
+    #{"id": 0.333, "type": 0.333, "location": 0.334},
+    #{"id": 1, "type": 0, "location": 0},
     {"id": 0, "type": 1, "location": 0},
     {"id": 0, "type": 0, "location": 1}]
 # Execute experiments for each combination of parameters
