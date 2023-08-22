@@ -14,6 +14,7 @@ class User:
     def __init__(self, id, start_position=None, speed=USER_SPEED, area_dimension=AREA_DIMENSIONS,
                  category_distribution=USER_CATEGORY_DISTRIBUTION, waypoints=USER_WAYPOINTS,
                  number_of_types=NUMBER_OF_USER_TYPES):
+        self.i = 0
         self.id = id
         self.speed = Decimal(speed)
         self.area_dimension = area_dimension
@@ -38,6 +39,8 @@ class User:
         return self.requests.pop(0)
 
     def _move(self, time_passed_in_ms: Decimal, apply_movement: bool = False):
+        if (time_passed_in_ms == 0):
+            return self.current_position
         position = self.current_position
         waypoint_index = self.waypoint_index
         distance_to_waypoint = self._distance_to(position, self.waypoints[self.waypoint_index])
@@ -125,9 +128,7 @@ class User:
         min_distance = Decimal('inf')
 
         closest_cache_worker_index = None
-
         user_position = self._move(time_epoch_in_ms)
-
         for index, cache_worker in enumerate(cache_workers):
             edge_node_position = cache_worker.edge_node.get_position()
             distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +

@@ -1,4 +1,5 @@
 
+import sys
 from typing import List
 
 from models.cache_worker import CacheWorker
@@ -8,21 +9,24 @@ from models.enums.order_type import OrderType
 from models.queue_element import QueueElement
 from models.request import Request
 from models.simulation_queue import SIMULATION_QUEUE
+from models.trace_element import TraceElement
 from models.user import User
-from parameters import DEFAULT_AVG_PRE_REQUEST_TIME, DEFAULT_STD_PRE_REQUEST_TIME, ACCURACY, DEFAULT_EXPIRATION_TIME, MODE
+from parameters import DEFAULT_AVG_PRE_REQUEST_TIME, DEFAULT_STD_PRE_REQUEST_TIME, ACCURACY, DEFAULT_EXPIRATION_TIME, GENERATE_TRACE, MODE
 from shared.RandomGenerator import regular_random
+from shared.helper import write_objects_to_csv
 
 
 class CacheManager:
     def __init__(
             self, accuracy=ACCURACY, average_pre_request_time=DEFAULT_AVG_PRE_REQUEST_TIME,
             std_pre_request_time=DEFAULT_STD_PRE_REQUEST_TIME, default_expiration_time=DEFAULT_EXPIRATION_TIME,
-            mode=MODE):
+            mode=MODE, generate_trace=GENERATE_TRACE):
         self.accuracy = accuracy
         self.average_pre_request_time = average_pre_request_time
         self.std_pre_request_time = std_pre_request_time
         self.default_expiration_time = default_expiration_time
         self.mode = mode
+        self.generate_trace = generate_trace
         return
 
     def epoch_passed(self, current_time):
@@ -43,15 +47,30 @@ class CacheManager:
             A list of cache workers involved in the simulation.
         """
         # 1. get all users order and separate orders per edge_node
+        trace_queue = []
         requests_per_cache_worker = [[] for cache_worker in cache_workers]
         for user in users:
+            print(f'user #{user.id} has {len(user.requests)}')
             for request in user.requests:
                 closest_cache_worker = user.closest_cache_worker_by_index_in_time(cache_workers, request.execution_time)
-                queueElement = QueueElement(request, user, request.execution_time, cache_workers[closest_cache_worker])
+                queueElement = QueueElement(request, user, request.execution_time,
+                                            cache_workers[closest_cache_worker])
                 SIMULATION_QUEUE.add_element(queueElement)
+                if (self.generate_trace):
+                    trace_queue.append(
+                        TraceElement(
+                            request.execution_time, closest_cache_worker,
+                            cache_workers[closest_cache_worker].edge_node.get_position(),
+                            request.provider.id, request.resource.size, user.id, request.user_location,
+                            request.application_latency, request.user_subarea))
                 random_number = regular_random.random()
                 if random_number <= self.accuracy:
                     requests_per_cache_worker[closest_cache_worker].append(request)
+
+        if self.generate_trace:
+            ordered_trace_elements = sorted(trace_queue, key=lambda element: element.timestamp)
+            write_objects_to_csv(ordered_trace_elements)
+            sys.exit()
 
         for i in range(len(requests_per_cache_worker)):
             requests_per_cache_worker[i] = sorted(requests_per_cache_worker[i], key=lambda x: x.execution_time)
@@ -68,7 +87,7 @@ class CacheManager:
                 new_caching_order = CachingOrder(
                     cache_worker_id=cache_workers[index].id, execution_time=execution_time,
                     expiration_time=expiration_time, provider=request.provider,
-                    request_execution_time=request.execution_time)               
+                    request_execution_time=request.execution_time)
                 caching_orders_per_cache_worker[index].append(new_caching_order)
 
             caching_orders_per_cache_worker[index] = sorted(

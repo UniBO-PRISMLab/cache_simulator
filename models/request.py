@@ -5,13 +5,15 @@ from models.resource import Resource
 
 
 class Request:
-    def __init__(self, execution_time: int, provider: Provider): #,cache_worker: int):
+    def __init__(self, execution_time: int, provider: Provider, user_location=None, subarea=None):  # ,cache_worker: int):
         #self.id: str = uuid.uuid4()
         self.provider = provider
         self.resource: Resource = None
         self.network_latency = 0
         self.application_latency = 0
         self.execution_time = execution_time
+        self.user_location = user_location
+        self.user_subarea = subarea
         #self.cache_worker = cache_worker
 
     def calculate_aoi(self, current_time):

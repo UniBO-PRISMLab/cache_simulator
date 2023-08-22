@@ -1,6 +1,10 @@
 import math
+import csv
+import os
 from typing import List
+from parameters import TRACE_FILE_NAME
 from shared.RandomGenerator import regular_random
+
 
 def generate_edge_node_position(dimension, min_distance, edge_nodes):
     """
@@ -60,3 +64,29 @@ def pass_time(time_epoch, user, cache_workers, edge_nodes):
     for edge_node in edge_nodes:
         edge_node.cache.epoch_passed(time_epoch)
     user.epoch_passed(time_epoch)
+
+
+def write_objects_to_csv(objects, file_name=TRACE_FILE_NAME):
+    if not objects:
+        print("No objects to write.")
+        return
+
+    # Get attribute names from the first object's class
+    attribute_names = list(vars(objects[0]).keys())
+
+    # Check if the file exists, and create it if it doesn't
+    if not os.path.exists(file_name):
+        with open(file_name, 'w', newline='') as empty_file:
+            pass
+
+    with open(file_name, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+
+        # Write the header only if the file was just created
+        if os.path.getsize(file_name) == 0:
+            writer.writerow(attribute_names)
+
+        # Write object attributes as rows
+        for obj in objects:
+            row = [getattr(obj, attr_name) for attr_name in attribute_names]
+            writer.writerow(row)
