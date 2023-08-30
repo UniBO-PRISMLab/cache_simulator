@@ -6,17 +6,25 @@ from models.enums.provider_type import ProviderType
 from models.enums.user_category import UserCategory
 
 parser = argparse.ArgumentParser(description='Description of your script')
-duration =                      43200000
-max_periodicity_per_subarea =   600000
-min_periodicity_per_subarea =   1000
-edge_nodes = 5
+max_periodicity_per_subarea = 14400000
+min_periodicity_per_subarea = 3000000
+edge_nodes = 12
+subareas = 9
+
 users = 100
-dimensions = 10000
-subareas = 4
-edge_node_distance = 500
+dimensions = 1000
+edge_node_distance = 10
 waypoints = 6
+duration = 1728000
+default_min_requests = 5
+default_period = 5
+
+
 parser.add_argument('--duration', type=int, default=duration,
                     help=f'Duration of the experiment in milliseconds (default: {duration})')
+args = parser.parse_args()
+DURATION = args.duration
+
 parser.add_argument('--label', type=str, default='baseline', help='Label of the experiment (default: baseline)')
 parser.add_argument('--edge-nodes', type=int, default=edge_nodes, help=f'Number of edge nodes (default: {edge_nodes})')
 parser.add_argument('--users', type=int, default=users, help=f'Number of users (default: {users})')
@@ -26,7 +34,8 @@ parser.add_argument('--area-dimensions', type=int, default=dimensions,
 parser.add_argument('--subareas', type=int, default=subareas, help=f'Number of subareas (default: {subareas})')
 parser.add_argument('--edge-node-distance', type=int, default=edge_node_distance,
                     help=f'Minimum distance between edge nodes in meters (default: {edge_node_distance})')
-parser.add_argument('--user-waypoints', type=int, default=waypoints, help=f'Number of waypoints for each user (default: {waypoints})')
+parser.add_argument('--user-waypoints', type=int, default=waypoints,
+                    help=f'Number of waypoints for each user (default: {waypoints})')
 parser.add_argument('--user-types', type=int, default=1, help='Number of user types (default: 5)')
 parser.add_argument(
     '--pre-req-time-avg', type=int, default=100,
@@ -69,12 +78,25 @@ parser.add_argument('--min_periodicity', type=int, default=min_periodicity_per_s
                     help=f'Minimum periodicity per subarea (default: {min_periodicity_per_subarea})')
 parser.add_argument('--max_periodicity', type=int, default=max_periodicity_per_subarea,
                     help=f'Maximum periodicity per subarea (default: {max_periodicity_per_subarea})')
+
+
+
+# Add arguments
+parser.add_argument('--min_requests', type=int, default=default_min_requests,
+                    help=f'Minimum number of requests (default: {default_min_requests})')
+
+parser.add_argument('--period', type=int, default=default_period,
+                    help=f'Period of time in seconds (default: {default_period})')
 args = parser.parse_args()
 
+
+MIN_REQUESTS_FARTHEST = args.min_requests
+PERIOD = args.period
 GENERATE_TRACE = True
 MIN_PERIODICITY_PER_SUBAREA = args.min_periodicity
 MAX_PERIODICITY_PER_SUBAREA = args.max_periodicity
-TRACE_FILE_NAME = f'output-{datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
+# {datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
+TRACE_FILE_NAME = f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
 EXPERIMENT_DURATION = args.duration
 EXPERIMENT_LABEL = args.label
 REPLICATIONS = args.replications

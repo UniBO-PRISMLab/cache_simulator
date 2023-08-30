@@ -40,7 +40,7 @@ for i in range(REPLICATIONS):
     request_generator = RequestGenerator(users, providers)
     users = request_generator.users
     for user in users:
-        print(f"user #{user.id} will make {len(user.requests)}")
+        print(f"user #{user.id} will make {len(user.requests)} - distance {user.distance}")
     now = datetime.datetime.now()
     print(f"{now} - All requests assigned")
 

@@ -48,9 +48,9 @@ class CacheManager:
         """
         # 1. get all users order and separate orders per edge_node
         trace_queue = []
-        requests_per_cache_worker = [[] for cache_worker in cache_workers]
+        requests_per_cache_worker = [[] for cache_worker in cache_workers]  
         for user in users:
-            print(f'user #{user.id} has {len(user.requests)}')
+            print(f'user #{user.id} has {len(user.requests)} - distance {user.distance}')
             for request in user.requests:
                 closest_cache_worker = user.closest_cache_worker_by_index_in_time(cache_workers, request.execution_time)
                 queueElement = QueueElement(request, user, request.execution_time,
@@ -64,6 +64,7 @@ class CacheManager:
                             request.provider.id, request.resource.size, user.id, request.user_location,
                             request.application_latency, request.user_subarea))
                 random_number = regular_random.random()
+                #print(f"user #{user.id} in pos {request.user_location} is in subarea {request.user_subarea}")
                 if random_number <= self.accuracy:
                     requests_per_cache_worker[closest_cache_worker].append(request)
 

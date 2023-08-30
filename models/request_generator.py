@@ -1,4 +1,5 @@
 from decimal import Decimal
+from shared.helper import calculate_decimal_distance
 from models.resource import Resource
 from models.time_trace_loader import time_trace_loader
 from shared.RandomGenerator import regular_random, np_random
@@ -13,7 +14,7 @@ from models.provider import Provider
 from models.user import User
 from models.request import Request
 
-from parameters import AREA_DIMENSIONS, EXPERIMENT_DURATION, GENERATE_TRACE, MAX_PERIODICITY_PER_SUBAREA, MIN_PERIODICITY_PER_SUBAREA, NUMBER_OF_USER_TYPES, NUMBER_OF_USERS, POPULARITY_DISTRIBUTION, RATE_OF_EVENT, SUBAREAS
+from parameters import AREA_DIMENSIONS, EXPERIMENT_DURATION, GENERATE_TRACE, MAX_PERIODICITY_PER_SUBAREA, MIN_PERIODICITY_PER_SUBAREA, MIN_REQUESTS_FARTHEST, NUMBER_OF_USER_TYPES, NUMBER_OF_USERS, PERIOD, POPULARITY_DISTRIBUTION, RATE_OF_EVENT, SUBAREAS
 
 # TODO: move Area class to a dedicated class file
 
@@ -29,7 +30,7 @@ class Area:
         self.periodicity = periodicity
 
     def __str__(self):
-        return f"Area #{self.id} - X: ({self.x1}, {self.x2}) Y: ({self.y1}, {self.y2}) "
+        return f"Area #{self.id} - p: {self.periodicity} - X: ({self.x1}, {self.x2}) Y: ({self.y1}, {self.y2}) "
 
 
 class RequestGenerator:
@@ -54,6 +55,7 @@ class RequestGenerator:
             UserCategory.ID.value: self.generate_popularity_per_user()
         }
         self.generate_trace = generate_trace
+        self.point_of_interest = self.random_point_of_interest()
 
         self.generate_requests()
 
@@ -63,59 +65,69 @@ class RequestGenerator:
         The inter-arrival times between events follow an exponential distribution with rate RATE_OF_EVENT .
         The popularity of each provider is given by a Zipf distribution  with popularity given by POPULARITY_DISTRIBUTION and truncate according to the NUMBER OF PROVIDER PER TYPE
         """
-        subareas = self.generate_requests_pattern_per_location()
         for user in self.users:
-            current_time = 0
-            if (self.generate_trace):
-                while current_time <= self.experiment_duration:
-                    size = self.next_size_from_trace(user.id)
-                    latency = self.next_latency_from_trace(user.id)
-                    user_location = user.get_position_at_time(current_time)
-                    user_subarea = self.find_subarea(user_location, subareas)
-                    next_request_in_ms =  regular_random.randint(0, MAX_PERIODICITY_PER_SUBAREA/2) if current_time == 0  else user_subarea.periodicity
-                    # print(next_request_in_ms)
-                    next_request_execution_time = next_request_in_ms + current_time
-                    if next_request_execution_time >= self.experiment_duration:
-                        break
-                    current_time += (next_request_in_ms)
-                    provider = self.providers[0] if self.generate_trace else self.choose_provider_id(user, current_time)
-                    new_request = Request(
-                        next_request_execution_time, provider)
-                    new_request.application_latency = latency
-                    new_request.resource = Resource(0, size)
-                    new_request.user_location = user_location
-                    new_request.user_subarea = user_subarea.id
-                    user.requests.append(new_request)
+            user.distance = calculate_decimal_distance(user.current_position, self.point_of_interest)
+        #distances = [calculate_decimal_distance(user.current_position, self.point_of_interest) for user in self.users]
+        # index = [0 for user in self.users]
+        sorted_users = sorted(self.users, key=lambda user: user.distance)
 
-                # for _ in range(time_trace_loader.get_trace_length(user.id)):
-                #     size = self.next_size_from_trace(user.id)
-                #     latency = self.next_latency_from_trace(user.id)
-                #     next_request_in_ms = self.next_event_time_from_trace(user.id)
-                #     next_request_execution_time = next_request_in_ms + current_time
-                #     current_time += (next_request_in_ms)
-                #     print('next request', next_request_execution_time)
-                #     provider = self.providers[0] if self.generate_trace else self.choose_provider_id(user, current_time)
-                #     new_request = Request(next_request_execution_time, provider)
-                #     new_request.application_latency = latency
-                #     new_request.resource = Resource(0, size)
-                #     user.requests.append(new_request)
-            else:
-                while current_time <= self.experiment_duration:
-                    next_request_in_ms = self.next_event_time(user.id)
-                    next_request_execution_time = next_request_in_ms + current_time
-                    if next_request_execution_time >= self.experiment_duration:
-                        break
-                    current_time += (next_request_in_ms)
-                    provider = self.providers[0] if self.generate_trace else self.choose_provider_id(user, current_time)
-                    new_request = Request(
-                        next_request_execution_time, provider)
-                    user.requests.append(new_request)
+        user = sorted_users[-1]
+        print(user)
+        current_time = 0
+        print(f"farthest device will make #{MIN_REQUESTS_FARTHEST*PERIOD} reqs")
+        for i in range(MIN_REQUESTS_FARTHEST*PERIOD):
+            size = self.next_size_from_trace(user.id)
+            latency = self.next_latency_from_trace(user.id)
+            user.number_of_requests = i
+            next_request_in_ms = self.custom_math_function(user.number_of_requests, user.distance)
+            # print(next_request_in_ms)
+            next_request_execution_time = next_request_in_ms + current_time
+            current_time += (next_request_in_ms)
+            print(current_time)
+            provider = self.providers[0] if self.generate_trace else self.choose_provider_id(user, current_time)
+            new_request = Request(
+                next_request_execution_time, provider)
+            new_request.application_latency = latency
+            new_request.resource = Resource(0, size)
+            new_request.user_location = user.current_position
+            user.requests.append(new_request)
+
+        self.experiment_duration = current_time
+        print(current_time)
+        for user in sorted_users[:-1]:
+            current_time = 0
+            while current_time <= self.experiment_duration:
+                size = self.next_size_from_trace(user.id)
+                latency = self.next_latency_from_trace(user.id)
+                next_request_in_ms = self.custom_math_function(user.number_of_requests, user.distance)
+                user.number_of_requests += 1
+                # print(next_request_in_ms)
+                next_request_execution_time = next_request_in_ms + current_time
+                if next_request_execution_time >= self.experiment_duration:
+                    break
+                current_time += (next_request_in_ms)
+                provider = self.providers[0] if self.generate_trace else self.choose_provider_id(user, current_time)
+                new_request = Request(
+                    next_request_execution_time, provider)
+                new_request.application_latency = latency
+                new_request.resource = Resource(0, size)
+                new_request.user_location = user.current_position
+                user.requests.append(new_request)
 
     def generate_requests_pattern_per_location(self) -> List[Area]:
         subareas = self.divide_square_area()
         for subarea in subareas:
             subarea.periodicity = regular_random.randint(MIN_PERIODICITY_PER_SUBAREA, MAX_PERIODICITY_PER_SUBAREA)
+            print(subarea)
         return subareas
+
+    def custom_math_function(self, index, distance, amplitude_percentage=0.25, period=PERIOD):
+        result = ((distance * amplitude_percentage) * abs(math.sin((index * math.pi) / period))) + distance
+        return result + self.generate_noise(result)
+
+    def generate_noise(self, value, percentage=0.1):
+        max = percentage * value
+        return regular_random.uniform(-max, +max)
 
     def next_event_time_from_function(self, position: Tuple[Decimal, Decimal]):
         subarea = self.find_subarea(position, self.popularity[UserCategory.LOCATION.value])
@@ -228,4 +240,9 @@ class RequestGenerator:
         for subarea in subareas:
             if subarea.x1 <= point[0] < subarea.x2 and subarea.y1 <= point[1] < subarea.y2:
                 return subarea
-        return -1  # If point does not belong to any subarea
+        return -1  # If point does not belong to any
+
+    def random_point_of_interest(self, dimensions: int = AREA_DIMENSIONS) -> Tuple[int, int]:
+        x = regular_random.randint(0, dimensions - 1)
+        y = regular_random.randint(0, dimensions - 1)
+        return x, y

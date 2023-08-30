@@ -31,7 +31,8 @@ class User:
         self.number_of_types = number_of_types
         self.type = regular_random.randint(
             0, self.number_of_types-1) if self.category is UserCategory.TYPE else None
-
+        self.number_of_requests = 1
+        self.distance = 0
     def check_request(self, time_in_ms):
         return (self.requests[0].execution_time == time_in_ms) if len(self.requests) > 0 else False
 
@@ -128,7 +129,7 @@ class User:
         min_distance = Decimal('inf')
 
         closest_cache_worker_index = None
-        user_position = self._move(time_epoch_in_ms)
+        user_position = self.current_position#self._move(time_epoch_in_ms)
         for index, cache_worker in enumerate(cache_workers):
             edge_node_position = cache_worker.edge_node.get_position()
             distance = math.sqrt((user_position[0] - edge_node_position[0]) ** 2 +
