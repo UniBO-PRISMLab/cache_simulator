@@ -8,7 +8,7 @@ from models.enums.user_category import UserCategory
 parser = argparse.ArgumentParser(description='Description of your script')
 max_periodicity_per_subarea = 14400000
 min_periodicity_per_subarea = 3000000
-edge_nodes = 12
+edge_nodes = 1
 subareas = 9
 
 users = 100
@@ -16,7 +16,7 @@ dimensions = 1000
 edge_node_distance = 10
 waypoints = 6
 duration = 1728000
-default_min_requests = 5
+default_min_requests = 10
 default_period = 5
 
 
@@ -96,7 +96,7 @@ GENERATE_TRACE = True
 MIN_PERIODICITY_PER_SUBAREA = args.min_periodicity
 MAX_PERIODICITY_PER_SUBAREA = args.max_periodicity
 # {datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
-TRACE_FILE_NAME = f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
+TRACE_FILE_NAME = 'test_data_2.csv'#f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
 EXPERIMENT_DURATION = args.duration
 EXPERIMENT_LABEL = args.label
 REPLICATIONS = args.replications

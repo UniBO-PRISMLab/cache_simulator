@@ -56,6 +56,7 @@ class RequestGenerator:
         }
         self.generate_trace = generate_trace
         self.point_of_interest = self.random_point_of_interest()
+        self.max_distance = None
 
         self.generate_requests()
 
@@ -72,9 +73,10 @@ class RequestGenerator:
         sorted_users = sorted(self.users, key=lambda user: user.distance)
 
         user = sorted_users[-1]
+        self.max_distance = user.distance
         print(user)
         current_time = 0
-        print(f"farthest device will make #{MIN_REQUESTS_FARTHEST*PERIOD} reqs")
+        print(f"farthest device will make {MIN_REQUESTS_FARTHEST*PERIOD} reqs")
         for i in range(MIN_REQUESTS_FARTHEST*PERIOD):
             size = self.next_size_from_trace(user.id)
             latency = self.next_latency_from_trace(user.id)
@@ -83,7 +85,7 @@ class RequestGenerator:
             # print(next_request_in_ms)
             next_request_execution_time = next_request_in_ms + current_time
             current_time += (next_request_in_ms)
-            print(current_time)
+            # print(current_time)
             provider = self.providers[0] if self.generate_trace else self.choose_provider_id(user, current_time)
             new_request = Request(
                 next_request_execution_time, provider)
@@ -93,6 +95,8 @@ class RequestGenerator:
             user.requests.append(new_request)
 
         self.experiment_duration = current_time
+        print('experiment duration', self.experiment_duration)
+        # sys.exit()
         print(current_time)
         for user in sorted_users[:-1]:
             current_time = 0
@@ -122,6 +126,8 @@ class RequestGenerator:
         return subareas
 
     def custom_math_function(self, index, distance, amplitude_percentage=0.25, period=PERIOD):
+        #scale = 3600000
+        #scaled_distance = (distance - 0) / (self.max_distance - 0)
         result = ((distance * amplitude_percentage) * abs(math.sin((index * math.pi) / period))) + distance
         return result + self.generate_noise(result)
 
