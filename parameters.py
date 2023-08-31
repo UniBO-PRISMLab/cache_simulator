@@ -8,7 +8,7 @@ from models.enums.user_category import UserCategory
 parser = argparse.ArgumentParser(description='Description of your script')
 max_periodicity_per_subarea = 14400000
 min_periodicity_per_subarea = 3000000
-edge_nodes = 1
+edge_nodes = 12
 subareas = 9
 
 users = 100
@@ -18,7 +18,9 @@ waypoints = 6
 duration = 1728000
 default_min_requests = 10
 default_period = 5
-
+pre_req_avg_time = 14.805994 * 60000
+pre_req_std_time = 6.683917 * 60000
+cache_expiration_time = 10
 
 parser.add_argument('--duration', type=int, default=duration,
                     help=f'Duration of the experiment in milliseconds (default: {duration})')
@@ -26,7 +28,7 @@ parser.add_argument('--duration', type=int, default=duration,
 parser.add_argument('--label', type=str, default='baseline', help='Label of the experiment (default: baseline)')
 parser.add_argument('--edge-nodes', type=int, default=edge_nodes, help=f'Number of edge nodes (default: {edge_nodes})')
 parser.add_argument('--users', type=int, default=users, help=f'Number of users (default: {users})')
-parser.add_argument('--user-speed', type=float, default=0.001, help='Average speed of the users in m/s (default: 10)')
+parser.add_argument('--user-speed', type=float, default=0, help='Average speed of the users in m/s (default: 10)')
 parser.add_argument('--area-dimensions', type=int, default=dimensions,
                     help=f'Area dimensions in square meters (default: {dimensions})')
 parser.add_argument('--subareas', type=int, default=subareas, help=f'Number of subareas (default: {subareas})')
@@ -36,20 +38,20 @@ parser.add_argument('--user-waypoints', type=int, default=waypoints,
                     help=f'Number of waypoints for each user (default: {waypoints})')
 parser.add_argument('--user-types', type=int, default=1, help='Number of user types (default: 5)')
 parser.add_argument(
-    '--pre-req-time-avg', type=int, default=100,
-    help='Average time between requests for each user in milliseconds (default: 100)')
+    '--pre-req-time-avg', type=int, default=pre_req_avg_time,
+    help=f'Average time between requests for each user in milliseconds (default: {pre_req_avg_time})')
 parser.add_argument(
-    '--pre-req-time-std', type=int, default=500,
-    help='Standard deviation of time between requests for each user in milliseconds (default: 500')
+    '--pre-req-time-std', type=int, default=pre_req_std_time,
+    help=f'Standard deviation of time between requests for each user in milliseconds (default: {pre_req_std_time}')
 parser.add_argument(
     '--neighbor-edge-nodes', type=int, default=0,
     help='Number of neighboring edge nodes for each cache worker (default: 0)')
-parser.add_argument('--cache-expiration-time', type=int, default=600000,
-                    help='Default expiration time for cached resources in milliseconds (default: 600000)')
+parser.add_argument('--cache-expiration-time', type=int, default=cache_expiration_time,
+                    help=f'Default expiration time for cached resources in milliseconds (default: {cache_expiration_time})')
 parser.add_argument('--cache-not-found-resource', type=bool, default=False,
                     help='Whether to cache not found resources (default: False)')
 parser.add_argument('--cache-size', type=float, default=4e+9, help='Maximum size of the cache in bytes (default: 4e+9)')
-parser.add_argument('--accuracy', type=float, default=0.2,  help='Initial hit rate of the cache (default: 0)')
+parser.add_argument('--accuracy', type=float, default=0.5,  help='Initial hit rate of the cache (default: 0)')
 parser.add_argument('--cache-mode', type=str, default="standard", help='Cache manager mode (default: standard)')
 parser.add_argument('--provider-high', type=float, default=0.333,
                     help='Fraction of high-capacity providers (default: 0.333)')
@@ -78,7 +80,6 @@ parser.add_argument('--max_periodicity', type=int, default=max_periodicity_per_s
                     help=f'Maximum periodicity per subarea (default: {max_periodicity_per_subarea})')
 
 
-
 # Add arguments
 parser.add_argument('--min_requests', type=int, default=default_min_requests,
                     help=f'Minimum number of requests (default: {default_min_requests})')
@@ -95,7 +96,7 @@ GENERATE_TRACE = True
 MIN_PERIODICITY_PER_SUBAREA = args.min_periodicity
 MAX_PERIODICITY_PER_SUBAREA = args.max_periodicity
 # {datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
-TRACE_FILE_NAME = 'test_data_2.csv'#f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
+TRACE_FILE_NAME = 'test_data_2.csv'  # f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
 EXPERIMENT_DURATION = args.duration
 EXPERIMENT_LABEL = args.label
 REPLICATIONS = args.replications

@@ -126,7 +126,8 @@ class RequestGenerator:
         return subareas
 
     def custom_math_function(self, index, distance, amplitude_percentage=0.25, period=PERIOD):
-        #scale = 3600000
+        scale = 3600000
+        distance = distance * scale
         #scaled_distance = (distance - 0) / (self.max_distance - 0)
         result = ((distance * amplitude_percentage) * abs(math.sin((index * math.pi) / period))) + distance
         return result + self.generate_noise(result)
