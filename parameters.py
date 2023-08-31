@@ -22,8 +22,6 @@ default_period = 5
 
 parser.add_argument('--duration', type=int, default=duration,
                     help=f'Duration of the experiment in milliseconds (default: {duration})')
-args = parser.parse_args()
-DURATION = args.duration
 
 parser.add_argument('--label', type=str, default='baseline', help='Label of the experiment (default: baseline)')
 parser.add_argument('--edge-nodes', type=int, default=edge_nodes, help=f'Number of edge nodes (default: {edge_nodes})')
@@ -89,6 +87,7 @@ parser.add_argument('--period', type=int, default=default_period,
                     help=f'Period of time in seconds (default: {default_period})')
 args = parser.parse_args()
 
+DURATION = args.duration
 
 MIN_REQUESTS_FARTHEST = args.min_requests
 PERIOD = args.period
