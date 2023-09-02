@@ -11,7 +11,7 @@ def calculate_margin_error(x, confidence_level=0.99):
 
 
 # Read the CSV file into a pandas DataFrame
-data = pd.read_csv('../consolidated_data2.csv')
+data = pd.read_csv('../consolidated_ccnc_data.csv')
 
 # Group the data by the 'label' column
 grouped_data = data.groupby('label')
@@ -31,7 +31,7 @@ result.columns = ['_'.join(col) for col in result.columns]
 result = result.reset_index()
 print(result)
 # Save the results to a new CSV file
-result.to_csv('metrics_calculated.csv', index=False)
+result.to_csv('metrics_ccnc_calculated.csv', index=False)
 
 
 def calculate_confidence_interval(confidence_level, means):
