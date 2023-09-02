@@ -71,6 +71,7 @@ def pass_time(time_epoch, user, cache_workers, edge_nodes):
 
 
 def write_objects_to_csv(objects, file_name=TRACE_FILE_NAME):
+    print(f'writing into {file_name}')
     if not objects:
         print("No objects to write.")
         return

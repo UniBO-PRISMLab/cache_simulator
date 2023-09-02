@@ -11,7 +11,7 @@ min_periodicity_per_subarea = 3000000
 edge_nodes = 1
 subareas = 9
 
-users = 100
+users = 10
 dimensions = 1000
 edge_node_distance = 10
 waypoints = 6
@@ -77,7 +77,7 @@ parser.add_argument('--min_periodicity', type=int, default=min_periodicity_per_s
 parser.add_argument('--max_periodicity', type=int, default=max_periodicity_per_subarea,
                     help=f'Maximum periodicity per subarea (default: {max_periodicity_per_subarea})')
 
-
+parser.add_argument('--rep', type=int, default=1, help='reps')
 
 # Add arguments
 parser.add_argument('--min_requests', type=int, default=default_min_requests,
@@ -88,14 +88,14 @@ parser.add_argument('--period', type=int, default=default_period,
 args = parser.parse_args()
 
 DURATION = args.duration
-
+REP = args.rep
 MIN_REQUESTS_FARTHEST = args.min_requests
 PERIOD = args.period
 GENERATE_TRACE = True
 MIN_PERIODICITY_PER_SUBAREA = args.min_periodicity
 MAX_PERIODICITY_PER_SUBAREA = args.max_periodicity
 # {datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
-TRACE_FILE_NAME = 'test_data_2.csv'#f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
+TRACE_FILE_NAME =  f'edge-node-{REP}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
 EXPERIMENT_DURATION = args.duration
 EXPERIMENT_LABEL = args.label
 REPLICATIONS = args.replications

@@ -9,9 +9,10 @@ from shared.helper import generate_edge_node_position, pass_time, write_objects_
 from models.edge_node import EdgeNode
 from models.request_generator import RequestGenerator
 from models.user import User
+from shared.RandomGenerator import regular_random
 
 
-from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, ACCURACY, GENERATE_TRACE, MODE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REPLICATIONS, USER_CATEGORY_DISTRIBUTION, WRITE_IN_FILE
+from parameters import AREA_DIMENSIONS, CACHE_NOT_FOUND_RESOURCE, EDGE_NODE_MIN_DISTANCE, ACCURACY, GENERATE_TRACE, MODE, NEIGHBOR_EDGE_NODES, NUMBER_OF_EDGE_NODES, NUMBER_OF_PROVIDERS, NUMBER_OF_USERS, REP, REPLICATIONS, USER_CATEGORY_DISTRIBUTION, WRITE_IN_FILE
 
 
 print(f"starting experiment with {ACCURACY} accuracy")
@@ -28,6 +29,7 @@ for i in range(REPLICATIONS):
     metrics_calculator.reset()
     SIMULATION_QUEUE.reset()
     # 1. Initialize users
+
     users = [User(i) for i in range(NUMBER_OF_USERS)]
     now = datetime.datetime.now()
     print(f"{now} - All users created")
