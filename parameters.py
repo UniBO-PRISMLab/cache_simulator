@@ -18,9 +18,12 @@ waypoints = 6
 duration = 1728000
 default_min_requests = 10
 default_period = 5
-pre_req_avg_time = 14.805994 * 60000
-pre_req_std_time = 6.683917 * 60000
+pre_req_avg_time = 14.805994
+pre_req_std_time = 6.683917
 cache_expiration_time = 10
+write_in_file = True
+accuracy = 0.5
+
 
 parser.add_argument('--duration', type=int, default=duration,
                     help=f'Duration of the experiment in milliseconds (default: {duration})')
@@ -38,10 +41,10 @@ parser.add_argument('--user-waypoints', type=int, default=waypoints,
                     help=f'Number of waypoints for each user (default: {waypoints})')
 parser.add_argument('--user-types', type=int, default=1, help='Number of user types (default: 5)')
 parser.add_argument(
-    '--pre-req-time-avg', type=int, default=pre_req_avg_time,
+    '--pre-req-time-avg', type=float, default=pre_req_avg_time,
     help=f'Average time between requests for each user in milliseconds (default: {pre_req_avg_time})')
 parser.add_argument(
-    '--pre-req-time-std', type=int, default=pre_req_std_time,
+    '--pre-req-time-std', type=float, default=pre_req_std_time,
     help=f'Standard deviation of time between requests for each user in milliseconds (default: {pre_req_std_time}')
 parser.add_argument(
     '--neighbor-edge-nodes', type=int, default=0,
@@ -51,7 +54,8 @@ parser.add_argument('--cache-expiration-time', type=int, default=cache_expiratio
 parser.add_argument('--cache-not-found-resource', type=bool, default=False,
                     help='Whether to cache not found resources (default: False)')
 parser.add_argument('--cache-size', type=float, default=4e+9, help='Maximum size of the cache in bytes (default: 4e+9)')
-parser.add_argument('--accuracy', type=float, default=0.5,  help='Initial hit rate of the cache (default: 0)')
+parser.add_argument('--accuracy', type=float, default=accuracy,
+                    help=f'Initial hit rate of the cache (default: {accuracy})')
 parser.add_argument('--cache-mode', type=str, default="standard", help='Cache manager mode (default: standard)')
 parser.add_argument('--provider-high', type=float, default=0.333,
                     help='Fraction of high-capacity providers (default: 0.333)')
@@ -71,7 +75,8 @@ parser.add_argument('--popularity-distribution', type=float, default=1.1, help='
 parser.add_argument('--cloud-trace-path', type=str, default='./data/network_traces/WAN', help='Cloud trace path')
 parser.add_argument('--path-bytes', type=str, default='./data/bytes/', help='Path for bytes')
 parser.add_argument('--path-time', type=str, default='./data/waiting-time/', help='Path for waiting time')
-parser.add_argument('--write-in-file', type=bool, default=False, help='Write results to file')
+parser.add_argument('--write-in-file', type=bool, default=write_in_file,
+                    help=f'Write results to file ({write_in_file})')
 parser.add_argument('--replications', type=int, default=1,
                     help='Number of replications to execute of a single experiment (default: 1)')
 parser.add_argument('--min_periodicity', type=int, default=min_periodicity_per_subarea,
@@ -96,7 +101,7 @@ GENERATE_TRACE = True
 MIN_PERIODICITY_PER_SUBAREA = args.min_periodicity
 MAX_PERIODICITY_PER_SUBAREA = args.max_periodicity
 # {datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
-TRACE_FILE_NAME = 'test_data_2.csv'  # f'edge-nodes-{edge_nodes}-period-{PERIOD}-min-req-{MIN_REQUESTS_FARTHEST}.csv'
+TRACE_FILE_NAME = f'{args.label}-{datetime.now().strftime("%d_%m_%Y%_H_%M_%S")}.csv'
 EXPERIMENT_DURATION = args.duration
 EXPERIMENT_LABEL = args.label
 REPLICATIONS = args.replications

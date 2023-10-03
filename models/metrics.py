@@ -105,7 +105,8 @@ class MetricsCalculator:
         self.to_store["hit_rate"] = hit_rate
         print(f"total requests: {acc_total_requests}")
         print(f"Average Hit Rate: {acc_cached_requests/acc_total_requests}")
-        print(f"Standard Deviation of Hit Rate: {statistics.stdev(hit_rates)}")
+        if(len(hit_rates) > 1):
+            print(f"Standard Deviation of Hit Rate: {statistics.stdev(hit_rates)}")
 
     def add_request(self, response: Request, current_time_epoch):
         self.metrics["latency"]["application"].append(response.application_latency)
@@ -154,7 +155,7 @@ class MetricsCalculator:
         if self.write_in_file:
             self.write_parameter_file()
             self.write_file("data.csv")
-            self.write_file("consolidated_data.csv", True)
+            self.write_file("consolidated_ccnc_data.csv", True)
 
 
 """             file_path = os.path.join(self.experiment_dir_path, "data.csv")

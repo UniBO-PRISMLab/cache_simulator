@@ -35,6 +35,8 @@ user_distributions = [  # 4
     #{"id": 1, "type": 0, "location": 0},
     {"id": 0, "type": 1, "location": 0},
     {"id": 0, "type": 0, "location": 1}]
+
+
 # Execute experiments for each combination of parameters
 for accuracy in accuracy_list:
     for cache_not_found in cache_not_found_list:
